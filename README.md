@@ -24,39 +24,6 @@ O Projeto Delta é uma aplicação web construída com FastAPI e Streamlit que p
 
 ## Estrutura do Projeto
 
-```
-.
-├── README.md
-├── requirements.txt
-├── streamlit_app.py
-└── app/
-    ├── main.py                 # Aplicação FastAPI principal
-    ├── teste.py               # Testes de funcionalidades
-    ├── agente/
-    │   └── interfaz.py        # Interface do agente
-    ├── api/
-    │   └── v1/               # Endpoints da API v1
-    │       ├── dependencies.py
-    │       ├── router.py
-    │       └── endpoints/
-    │           ├── devops_epic.py
-    │           ├── devops.py
-    │           └── teams.py
-    ├── core/                  # Lógica de negócios
-    │   ├── config.py
-    │   ├── customLRUCache.py
-    │   ├── devops_models.py
-    │   ├── devops_service.py
-    │   ├── project_model.py
-    │   ├── teams_service.py
-    │   └── utils.py
-    ├── streamlit/            # Componentes da interface Streamlit
-    │   ├── __init__.py
-    │   └── streamlit_models.py
-    └── tests/               # Testes
-        ├── printRelationships.py
-        └── test.ipynb
-```
 
 ## Instalação
 
