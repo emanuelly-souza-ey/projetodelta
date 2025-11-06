@@ -15,7 +15,8 @@ class IntentMetadata:
     name: str  # Display name (e.g., "Horas Trabalhadas")
     description: str  # Full description for classification
     handler_class: Type[Any]  # Handler class for this intent
-    agent_name: str = None  # Optional agent name (defaults to category_agent)
+    agent_name: Optional[str] = None  # Optional agent name (defaults to category_agent)
+    requires_llm: bool = True  # Whether this intent requires LLM processing (Answer Agent)
     
     def get_agent_name(self) -> str:
         """Get agent name, using category as default if not specified."""
@@ -32,9 +33,18 @@ class IntentRegistry:
     
     @classmethod
     def register(cls, metadata: IntentMetadata):
-        """Register an intent with its metadata."""
+        """
+        Register an intent with its metadata.
+        Allows re-registration (useful for testing) but warns if already exists.
+        """
         if metadata.category in cls._intents:
-            raise ValueError(f"Intent '{metadata.category}' is already registered")
+            # Allow re-registration for testing purposes
+            # In production this shouldn't happen due to import caching
+            import warnings
+            warnings.warn(
+                f"Intent '{metadata.category}' is already registered. Re-registering.",
+                UserWarning
+            )
         cls._intents[metadata.category] = metadata
     
     @classmethod

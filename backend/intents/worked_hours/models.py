@@ -3,13 +3,15 @@ Data models for worked hours intent.
 """
 
 from pydantic import BaseModel, Field
-from typing import Optional, List
+from typing import Optional, List, ClassVar
 
 from backend.intents.base_intent import BaseQueryParams, BaseResponse
 
 
 class WorkedHoursQuery(BaseQueryParams):
     """Parameters extracted from user query for worked hours."""
+    
+    REQUIRES_PROJECT: ClassVar[bool] = True  # This intent requires a selected project
     
     person_name: Optional[str] = Field(
         None,
@@ -24,16 +26,6 @@ class WorkedHoursQuery(BaseQueryParams):
     end_date: Optional[str] = Field(
         None,
         description="End date in ISO format (YYYY-MM-DD)"
-    )
-    
-    project_id: Optional[str] = Field(
-        None,
-        description="Azure DevOps project ID"
-    )
-    
-    project_name: Optional[str] = Field(
-        None,
-        description="Project name if ID not available"
     )
 
 
@@ -53,4 +45,3 @@ class WorkedHoursResponse(BaseResponse):
     start_date: str = Field(..., description="Period start date")
     end_date: str = Field(..., description="Period end date")
     breakdown: List[HourBreakdown] = Field(default_factory=list, description="Hour breakdown by task")
-    project_name: Optional[str] = Field(None, description="Project name")

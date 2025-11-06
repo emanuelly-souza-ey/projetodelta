@@ -13,7 +13,8 @@ INTENT_METADATA = IntentMetadata(
     name="Consulta Não Relacionada",
     description="Perguntas não relacionadas ao Azure DevOps (clima, futebol, conversas gerais, etc.)",
     handler_class=create_default_handler,
-    agent_name="default_agent"
+    agent_name="default_agent",
+    requires_llm=False  # Direct response, no LLM needed
 )
 
 # Auto-register this intent

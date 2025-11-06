@@ -31,6 +31,8 @@ from . import project_progress
 from . import delayed_tasks
 from . import project_team
 from . import daily_activities
+from . import project_selection  # Project listing and selection
+from . import available_intents  # Help and available actions
 from . import other  # DevOps queries not yet implemented
 from . import default  # Non-DevOps queries
 

@@ -28,9 +28,16 @@ class DefaultService(BaseService):
         }
 
 
-def create_default_handler():
-    """Factory function to create default intent handler."""
+def create_default_handler(session_id: Optional[str] = None, intent_name: Optional[str] = None):
+    """Factory function to create default intent handler.
+    
+    Args:
+        session_id: Optional chat session ID for logging
+        intent_name: Optional intent name for structured logging
+    """
     return BaseIntentHandler(
         extractor=DefaultExtractor(),
-        service=DefaultService()
+        service=DefaultService(),
+        session_id=session_id,
+        intent_name=intent_name or "default"
     )

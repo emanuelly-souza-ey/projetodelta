@@ -13,7 +13,8 @@ INTENT_METADATA = IntentMetadata(
     name="Outras Consultas DevOps",
     description="Consultas válidas sobre Azure DevOps que ainda não foram implementadas (repos, builds, releases, etc.)",
     handler_class=create_other_handler,
-    agent_name="other_agent"
+    agent_name="other_agent",
+    requires_llm=False  # Direct response for not-yet-implemented features
 )
 
 # Auto-register this intent

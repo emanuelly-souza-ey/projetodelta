@@ -8,7 +8,7 @@ from backend.intents.base_intent import BaseService
 from .models import WorkedHoursQuery, WorkedHoursResponse, HourBreakdown
 
 
-class WorkedHoursService(BaseService):
+class WorkedHoursService(BaseService[WorkedHoursQuery, WorkedHoursResponse]):
     """Service to query worked hours from Azure DevOps API."""
     
     async def query_data(self, params: WorkedHoursQuery) -> WorkedHoursResponse:
@@ -48,8 +48,7 @@ class WorkedHoursService(BaseService):
                     total_hours=0.0,
                     start_date=params.start_date or "",
                     end_date=params.end_date or "",
-                    breakdown=[],
-                    project_name=params.project_name
+                    breakdown=[]
                 )
             
             # Get work item details
@@ -146,6 +145,5 @@ class WorkedHoursService(BaseService):
             total_hours=total_hours,
             start_date=params.start_date or "",
             end_date=params.end_date or "",
-            breakdown=breakdown,
-            project_name=params.project_name
+            breakdown=breakdown
         )
