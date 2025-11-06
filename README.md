@@ -48,6 +48,16 @@ pip install -r requirements.txt
 
 4. Configure as variáveis de ambiente criando um arquivo `.env` na raiz do projeto.
 
+```
+AZURE_DEVOPS_URL=
+AZURE_DEVOPS_TOKEN=
+
+AZURE_OPENAI_ENDPOINT = 
+AZURE_OPENAI_KEY = 
+AZURE_DEPLOYMENT_NAME = 
+AZURE_OPENAI_API_VERSION = 
+```
+
 ## Uso
 
 ### Executando a API
