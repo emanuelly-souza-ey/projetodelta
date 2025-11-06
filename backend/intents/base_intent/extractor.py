@@ -4,14 +4,17 @@ All intent extractors should inherit from this class.
 """
 
 from abc import ABC, abstractmethod
-from typing import Optional, Dict
+from typing import Optional, Dict, TypeVar, Generic
 
 from backend.config import get_azure_config
 from backend.config.logging import chat_logger
 from .models import BaseQueryParams
 
 
-class BaseExtractor(ABC):
+TParams = TypeVar('TParams', bound=BaseQueryParams)
+
+
+class BaseExtractor(ABC, Generic[TParams]):
     """
     Abstract base class for parameter extractors.
     Uses LLM to extract structured parameters from natural language queries.
@@ -51,7 +54,7 @@ class BaseExtractor(ABC):
         self,
         query: str,
         context: Optional[Dict] = None
-    ) -> BaseQueryParams:
+    ) -> TParams:
         """
         Extract parameters from natural language query.
         

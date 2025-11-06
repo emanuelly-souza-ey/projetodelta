@@ -111,12 +111,30 @@ class BaseIntentHandler:
                 self.logger.info("Extracting parameters...")
             
             params = await self.extractor.extract_params(query, context)
+            
+            # 3. Enrich params with project_id from context
+            project_context = context.get("project_context", {})
+            context_project_id = project_context.get("project_id")
+            if context_project_id:
+                params.project_id = context_project_id
+                if self.logger:
+                    self.logger.info(f"Enriched params with project_id from context: {context_project_id}")
+            
+            # 4. Validate project requirement
+            if getattr(params.__class__, 'REQUIRES_PROJECT', False):
+                if not params.project_id:
+                    error_msg = "Este intent requer que um projeto esteja selecionado. Por favor, selecione um projeto primeiro."
+                    if self.logger:
+                        self.logger.warning(f"Project required but not found in context")
+                    raise ValueError(error_msg)
+            # [_] TODO Return Natural language message if this action needs a project selected
+            
             params_dict = _to_dict(params)
             
             if self.logger:
                 self.logger.info(f"Parameters extracted: {params_dict}")
             
-            # 3. Query service for data
+            # 4. Query service for data
             if self.logger:
                 self.logger.info("Querying service for data...")
             
@@ -128,13 +146,14 @@ class BaseIntentHandler:
             # 4. Convert to dictionary (handle both dict and Pydantic models)
             data = _to_dict(response_data)
             
-            # 5. Save to memory
+            # 5. Save to memory (preserving project context)
             new_conversation_id = self.memory.save(
                 conversation_id or str(uuid4()),
                 query=query,
                 intent=self.__class__.__name__,
                 params=params_dict,
-                result=data
+                result=data,
+                project_context=project_context
             )
             
             elapsed_time = time.time() - start_time

@@ -4,7 +4,7 @@ All intent services should inherit from this class.
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, TypeVar, Generic
 import requests
 from requests.adapters import HTTPAdapter, Retry
 
@@ -13,7 +13,11 @@ from backend.config.logging import chat_logger
 from .models import BaseQueryParams, BaseResponse
 
 
-class BaseService(ABC):
+TParams = TypeVar('TParams', bound=BaseQueryParams)
+TResponse = TypeVar('TResponse', bound=BaseResponse)
+
+
+class BaseService(ABC, Generic[TParams, TResponse]):
     """
     Abstract base class for intent services.
     Handles data retrieval from Azure DevOps or other external sources.
@@ -136,7 +140,7 @@ class BaseService(ABC):
             raise Exception(f"Request failed for {url}: {str(e)}") from e
     
     @abstractmethod
-    async def query_data(self, params: BaseQueryParams) -> BaseResponse:
+    async def query_data(self, params: TParams) -> TResponse:
         """
         Query data based on extracted parameters.
         
@@ -165,7 +169,7 @@ class BaseService(ABC):
         """
         pass
     
-    def _build_wiql_query(self, params: BaseQueryParams) -> str:
+    def _build_wiql_query(self, params: TParams) -> str:
         """
         Helper method to build WIQL queries for Azure DevOps.
         Subclasses can override this for specific query construction.
@@ -177,18 +181,3 @@ class BaseService(ABC):
             WIQL query string
         """
         raise NotImplementedError("Subclass must implement _build_wiql_query if using WIQL")
-    
-    def _get_project_id(self, params: BaseQueryParams) -> str:
-        """
-        Helper method to get project ID.
-        Uses provided project_id or falls back to default from config.
-        
-        Args:
-            params: Query parameters
-            
-        Returns:
-            Azure DevOps project ID
-        """
-        if hasattr(params, 'project_id') and params.project_id:
-            return params.project_id
-        return self.azure_config.devops_project_id
