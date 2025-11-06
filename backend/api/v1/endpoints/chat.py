@@ -9,7 +9,7 @@ from typing import Optional, Dict, Any
 from backend.agents.router_agent import RouterAgent
 from backend.agents.answer_agent import AnswerAgent
 from backend.agents.memory import get_memory
-from backend.intents import get_handler
+from backend.intents import get_handler, IntentRegistry
 
 
 router = APIRouter()
@@ -31,7 +31,7 @@ class ChatResponse(BaseModel):
     error: Optional[str] = Field(None, description="Error message if any")
 
 
-@router.post("/chat", response_model=ChatResponse)
+@router.post("/", response_model=ChatResponse)
 async def chat(request: ChatRequest):
     """
     Main chat endpoint.
@@ -75,18 +75,25 @@ async def chat(request: ChatRequest):
         if not handler_result.get("data"):
             handler_result["data"] = {}
         
-        # 4. Get conversation context
-        memory = get_memory()
-        context = memory.get_context(handler_result["conversation_id"])
+        # 4. Check if intent requires LLM processing
+        intent_metadata = IntentRegistry.get(intent_category)
         
-        # 5. Generate natural language response
-        answer_agent = AnswerAgent(session_id=session_id)
-        natural_response = answer_agent.generate_response(
-            query=request.message,
-            intent=intent_category,
-            data=handler_result["data"],
-            context=context
-        )
+        if intent_metadata.requires_llm:
+            # 5a. Get conversation context
+            memory = get_memory()
+            context = memory.get_context(handler_result["conversation_id"])
+            
+            # 5b. Generate natural language response using Answer Agent
+            answer_agent = AnswerAgent(session_id=session_id)
+            natural_response = answer_agent.generate_response(
+                query=request.message,
+                intent=intent_category,
+                data=handler_result["data"],
+                context=context
+            )
+        else:
+            # 5c. Use direct message from handler (no LLM, saves tokens!)
+            natural_response = handler_result["data"].get("message", "No response available.")
         
         return ChatResponse(
             message=natural_response,
