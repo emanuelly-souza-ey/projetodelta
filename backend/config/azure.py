@@ -4,11 +4,15 @@ Single source of truth for Azure OpenAI and Azure DevOps credentials.
 """
 
 import os
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, TypeVar, cast
 from dotenv import load_dotenv
 import instructor
 from openai import AzureOpenAI
+from openai.types.chat import ChatCompletion
 import requests
+
+
+T = TypeVar('T')
 
 
 class AzureConfig:
@@ -72,6 +76,10 @@ class AzureConfig:
         Singleton instance shared across all uses.
         """
         if self._openai_client is None:
+            # Type narrowing: we validated these in __init__
+            assert self.openai_endpoint is not None, "OpenAI endpoint must be set"
+            assert self.openai_key is not None, "OpenAI key must be set"
+            
             self._openai_client = AzureOpenAI(
                 azure_endpoint=self.openai_endpoint,
                 api_key=self.openai_key,
@@ -112,10 +120,10 @@ class AzureConfig:
     def create_chat_completion(
         self,
         messages: list,
-        response_model: Optional[Any] = None,
+        response_model: Optional[type[T]] = None,
         temperature: float = 0.7,
         max_tokens: int = 800
-    ):
+    ) -> T | ChatCompletion:
         """
         Create a chat completion with consistent settings.
         
@@ -130,13 +138,15 @@ class AzureConfig:
         """
         if response_model:
             # Use instructor for structured output
-            return self.instructor_client.chat.completions.create(
+            # Type checker can't infer instructor's dynamic return type, so we cast
+            result = self.instructor_client.chat.completions.create(
                 model=self.deployment_name,
-                response_model=response_model,
+                response_model=response_model,  # type: ignore[arg-type]
                 messages=messages,
                 temperature=temperature,
                 max_tokens=max_tokens
             )
+            return cast(T, result)
         else:
             # Use standard OpenAI client
             return self.openai_client.chat.completions.create(
@@ -145,6 +155,83 @@ class AzureConfig:
                 temperature=temperature,
                 max_tokens=max_tokens
             )
+    
+    def validate_openai_connection(self) -> Dict[str, Any]:
+        """
+        Validate Azure OpenAI connection with a test completion.
+        
+        Returns:
+            Dict with status and details about the connection
+        """
+        try:
+            response = self.openai_client.chat.completions.create(
+                model=self.deployment_name,
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "user", "content": "Say 'Connection successful' in Spanish."}
+                ],
+                max_tokens=50,
+                temperature=0.7
+            )
+            
+            return {
+                "status": "success",
+                "message": "Azure OpenAI connection is working",
+                "endpoint": self.openai_endpoint,
+                "deployment": self.deployment_name,
+                "test_response": response.choices[0].message.content,
+                "model": response.model
+            }
+        except Exception as e:
+            return {
+                "status": "error",
+                "message": f"Azure OpenAI connection failed: {str(e)}",
+                "endpoint": self.openai_endpoint,
+                "deployment": self.deployment_name,
+                "error_type": type(e).__name__
+            }
+    
+    def validate_devops_connection(self) -> Dict[str, Any]:
+        """
+        Validate Azure DevOps connection by fetching project information.
+        
+        Returns:
+            Dict with status and details about the connection
+        """
+        try:
+            # Test the connection by getting project info
+            url = f"{self.devops_url}/_apis/projects/{self.devops_project_id}?api-version=7.0"
+            headers = self.get_devops_headers()
+            
+            response = requests.get(url, headers=headers, timeout=10)
+            response.raise_for_status()
+            
+            project_data = response.json()
+            
+            return {
+                "status": "success",
+                "message": "Azure DevOps connection is working",
+                "devops_url": self.devops_url,
+                "project_id": self.devops_project_id,
+                "project_name": project_data.get("name", "Unknown"),
+                "project_state": project_data.get("state", "Unknown")
+            }
+        except requests.exceptions.RequestException as e:
+            return {
+                "status": "error",
+                "message": f"Azure DevOps connection failed: {str(e)}",
+                "devops_url": self.devops_url,
+                "project_id": self.devops_project_id,
+                "error_type": type(e).__name__
+            }
+        except Exception as e:
+            return {
+                "status": "error",
+                "message": f"Unexpected error: {str(e)}",
+                "devops_url": self.devops_url,
+                "project_id": self.devops_project_id,
+                "error_type": type(e).__name__
+            }
 
 
 # Global singleton instance
