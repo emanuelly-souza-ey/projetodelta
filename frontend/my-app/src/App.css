@@ -1,0 +1,416 @@
+/* === VARIABLES DE COLOR === */
+:root {
+  --color-primary: #61dafb;
+  --color-secondary: #282c34;
+  --color-success: #4caf50;
+  --color-warning: #ff9800;
+  --color-error: #f44336;
+  --color-info: #2196f3;
+
+  --color-text-primary: #333;
+  --color-text-secondary: #666;
+  --color-text-muted: #999;
+
+  --color-background: #ffffff;
+  --color-background-light: #fafafa;
+  --color-background-dark: #282c34;
+
+  --color-border: #ddd;
+  --color-border-light: #eee;
+  --color-border-dark: #ccc;
+
+  --color-chat-bubble: #f0f0f0;
+  --color-hover: #e0e0e0;
+}
+
+/* === VARIABLES DE TIPOGRAFÍA === */
+:root {
+  /* Font Family */
+  --font-family-primary: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  --font-family-mono: 'Courier New', Consolas, Monaco, monospace;
+
+  /* Font Sizes - Escala Tipográfica */
+  --font-size-xs: 10px;
+  --font-size-sm: 12px;
+  --font-size-base: 14px;
+  --font-size-md: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 20px;
+  --font-size-2xl: 24px;
+  --font-size-3xl: 30px;
+  --font-size-4xl: 36px;
+
+  /* Line Heights */
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.8;
+
+  /* Letter Spacing */
+  --letter-spacing-tight: -0.02em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide: 0.05em;
+
+  /* Font Weights */
+  --font-weight-light: 300;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+}
+
+/* === VARIABLES DE ESPACIADO === */
+:root {
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-base: 16px;
+  --spacing-lg: 20px;
+  --spacing-xl: 24px;
+  --spacing-2xl: 32px;
+  --spacing-3xl: 40px;
+  --spacing-4xl: 48px;
+}
+
+/* === VARIABLES DE SOMBRAS === */
+:root {
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-base: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* === VARIABLES DE BORDER RADIUS === */
+:root {
+  --radius-sm: 4px;
+  --radius-base: 5px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
+  --radius-full: 9999px;
+}
+
+/* === VARIABLES DE TRANSICIÓN === */
+:root {
+  --transition-fast: 150ms;
+  --transition-base: 200ms;
+  --transition-slow: 300ms;
+  --easing-base: ease-in-out;
+  --easing-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* === BRAND IDENTITY === */
+:root {
+  --brand-tagline: "Inteligencia en gestión de proyectos";
+  --brand-personality: "Profesional, Eficiente, Confiable";
+}
+
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Chat styles */
+.chat-container {
+  max-width: 800px;
+  margin: 20px auto;
+  border: 2px solid #ccc;
+  border-radius: 10px;
+  padding: 20px;
+  height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+  margin-bottom: 20px;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  margin-bottom: 20px;
+}
+
+.chat-bubble {
+  margin: 10px 0;
+  padding: 10px;
+  border-radius: 5px;
+  background-color: #f0f0f0;
+}
+
+.timestamp {
+  font-size: 0.8em;
+  color: #999;
+  margin-left: 10px;
+}
+
+.typing-indicator {
+  color: #666;
+  font-style: italic;
+}
+
+.empty-state {
+  text-align: center;
+  color: #999;
+  margin-top: 100px;
+}
+
+/* === STORYBOOK STYLES === */
+
+/* Container principal - estilo limpio tipo cuaderno */
+.storybook-container {
+  padding: 40px;
+  max-width: 1600px;
+  margin: 0 auto;
+  background: #ffffff;
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+
+.storybook-header {
+  margin-bottom: 40px;
+  border-bottom: 2px solid #282c34;
+  padding-bottom: 20px;
+}
+
+.storybook-title {
+  font-size: 36px;
+  font-weight: 600;
+  color: #282c34;
+  margin: 0 0 5px 0;
+}
+
+.storybook-subtitle {
+  font-size: 16px;
+  color: #666;
+  margin: 0;
+}
+
+/* Layout de 2 columnas */
+.storybook-layout {
+  display: grid;
+  grid-template-columns: 400px 1fr;
+  gap: 40px;
+  align-items: start;
+}
+
+.storybook-sidebar {
+  position: sticky;
+  top: 20px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+}
+
+.storybook-main {
+  min-width: 0;
+}
+
+/* Secciones */
+.storybook-section {
+  margin-bottom: 40px;
+}
+
+.storybook-section-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #282c34;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #eee;
+}
+
+/* Cards de fundamentos de diseño */
+.storybook-card {
+  background: #fafafa;
+  padding: 25px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+.storybook-card h3 {
+  margin-top: 0;
+  color: #282c34;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+/* Component demo - diseño limpio */
+.storybook-component-demo {
+  background: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-bottom: 30px;
+  overflow: hidden;
+}
+
+.component-demo-header {
+  background: #f5f5f5;
+  padding: 15px 20px;
+  border-bottom: 1px solid #ddd;
+}
+
+.component-demo-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #282c34;
+}
+
+.component-demo-body {
+  padding: 25px;
+  background: #ffffff;
+}
+
+/* Paleta de colores */
+.color-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: 15px;
+}
+
+.color-item {
+  text-align: center;
+}
+
+.color-swatch {
+  width: 100%;
+  height: 60px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+.color-name {
+  font-weight: 600;
+  font-size: 11px;
+  margin: 3px 0;
+  color: #282c34;
+  font-family: 'Courier New', monospace;
+}
+
+.color-info {
+  font-size: 10px;
+  color: #666;
+}
+
+/* Tipografía */
+.typography-samples {
+  margin-top: 20px;
+  padding: 20px;
+  background: #ffffff;
+  border: 1px solid #eee;
+  border-radius: 4px;
+}
+
+.typography-samples h1,
+.typography-samples h2,
+.typography-samples h3 {
+  margin: 15px 0;
+}
+
+/* Sistema de espaciado */
+.spacing-demo {
+  margin-top: 20px;
+}
+
+.spacing-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 12px;
+  background: #ffffff;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.spacing-bar {
+  height: 30px;
+  background: #282c34;
+  border-radius: 2px;
+}
+
+/* Border radius */
+.border-radius-demo {
+  display: flex;
+  gap: 30px;
+  margin-top: 20px;
+  justify-content: flex-start;
+}
+
+.border-radius-sample {
+  text-align: center;
+}
+
+.border-radius-box {
+  width: 100px;
+  height: 100px;
+  background: #282c34;
+  margin-bottom: 10px;
+}
+
+/* Quick Replies - del componente real */
+.quick-replies {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.quick-reply-button {
+  padding: 8px 16px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background: #f0f0f0;
+  color: #333;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.quick-reply-button:hover {
+  background: #e0e0e0;
+}
