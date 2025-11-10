@@ -23,33 +23,24 @@ class RouterAgent:
     CLASSIFICATION_PROMPT = """Você é um assistente de classificação de intenções. 
         Analise a consulta do usuário e determine qual categoria melhor representa sua intenção.
 
-        CONTEXTO ATUAL DO PROJETO:
+        CONTEXTO ATUAL:
         {project_context}
 
-        MENSAGENS RECENTES DA CONVERSA:
+        HISTÓRICO RECENTE:
         {recent_messages}
 
-        PRIORIDADE MÁXIMA - Detecção de Mudança de Projeto:
-        Se o usuário mencionar explicitamente mudar, selecionar ou trocar de projeto,
-        classifique SEMPRE como "project_selection", mesmo que haja outras intenções na consulta.
-        
-        CONTEXTO DE SELEÇÃO:
-        Se o bot acabou de listar projetos e o usuário responde com apenas um número (ex: "1", "2"),
-        classifique como "project_selection" pois está selecionando da lista anterior.
-
-        Categorias disponíveis:
+        CATEGORIAS DISPONÍVEIS:
         {categories}
 
-        Instruções:
-        1. PRIMEIRO: Verifique se é uma mudança explícita de projeto → "project_selection"
-        2. SEGUNDO: Verifique contexto recente - se bot listou projetos e usuário diz número → "project_selection"
-        3. Se NÃO for mudança de projeto, analise cuidadosamente a consulta
-        4. Identifique palavras-chave e o contexto da pergunta
-        5. Selecione a categoria que melhor representa a intenção
-        6. Se não houver correspondência clara, escolha a categoria mais próxima
-        7. Em caso de dúvida, use a categoria "other"
-        8. Forneça uma pontuação de confiança honesta (0.0 a 1.0)
-        9. Explique brevemente seu raciocínio
+        INSTRUÇÕES:
+        1. Leia cuidadosamente a consulta do usuário
+        2. Identifique palavras-chave e o contexto da pergunta
+        3. Compare com as descrições das categorias disponíveis
+        4. Selecione a categoria que melhor corresponde à intenção
+        5. Se houver contexto recente relevante (ex: bot listou opções, usuário responde com número), considere isso
+        6. Em caso de dúvida, escolha a categoria mais próxima ou use "other"
+        7. Forneça uma pontuação de confiança honesta (0.0 a 1.0)
+        8. Explique brevemente seu raciocínio
 
         Consulta do usuário: {query}
     """
