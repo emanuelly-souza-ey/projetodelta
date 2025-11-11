@@ -28,6 +28,7 @@ class ChatResponse(BaseModel):
     confidence: float = Field(..., description="Classification confidence")
     data: Optional[Dict[str, Any]] = Field(None, description="Structured data for frontend rendering")
     conversation_id: str = Field(..., description="Conversation ID for follow-up queries")
+    selected_project: Optional[str] = Field(None, description="Name of currently selected project")
     error: Optional[str] = Field(None, description="Error message if any")
 
 
@@ -95,12 +96,19 @@ async def chat(request: ChatRequest):
             # 5c. Use direct message from handler (no LLM, saves tokens!)
             natural_response = handler_result["data"].get("message", "No response available.")
         
+        # Get current selected project from memory
+        memory = get_memory()
+        context = memory.get_context(handler_result["conversation_id"])
+        project_context = context.get("project_context", {})
+        selected_project_name = project_context.get("project_name") if project_context.get("scope") == "specific" else None
+        
         return ChatResponse(
             message=natural_response,
             intent=intent_category,
             confidence=confidence,
             data=handler_result["data"],
             conversation_id=handler_result["conversation_id"],
+            selected_project=selected_project_name,
             error=None
         )
         
