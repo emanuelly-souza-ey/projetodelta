@@ -11,7 +11,7 @@ from backend.intents.base_intent.models import BaseQueryParams, BaseResponse
 class GetTasksQuery(BaseQueryParams):
     """Parameters for get tasks queries."""
     
-    REQUIRES_PROJECT: ClassVar[bool] = True
+    REQUIRES_PROJECT: ClassVar[bool] = False
     
     user_query: Optional[str] = Field(
         None,

@@ -24,8 +24,7 @@ class GetTasksService(BaseService[GetTasksQuery, GetTasksResponse]):
         # Build WIQL query
         wiql_query = self._build_wiql_query(params)
         
-        # Get project ID (use default if not provided) 
-        project_id = params.project_id or self.azure_config.devops_project_id
+        project_id = self.azure_config.devops_project_id
         
         # Execute query
         url = self.azure_config.get_devops_url(project_id) + "/_apis/wit/wiql?api-version=7.1"
@@ -41,12 +40,12 @@ class GetTasksService(BaseService[GetTasksQuery, GetTasksResponse]):
             
             data = response.json()
             
-            # Handle hierarchical query response (workItemRelations)
+            # Handle both simple and hierarchical query responses
             work_item_ids = []
             relations = data.get("workItemRelations", [])
             
             if relations:
-                # Extract unique work item IDs from relations
+                # Hierarchical query response (Epic → Tasks structure)
                 work_item_ids_set = set()
                 for relation in relations:
                     source = relation.get("source")
@@ -57,7 +56,7 @@ class GetTasksService(BaseService[GetTasksQuery, GetTasksResponse]):
                         work_item_ids_set.add(target.get("id"))
                 work_item_ids = list(work_item_ids_set)
             else:
-                # Fallback to direct work items if no relations
+                # Simple query response (direct work items)
                 work_item_ids = [item["id"] for item in data.get("workItems", [])]
             
             if not work_item_ids:
@@ -82,7 +81,8 @@ class GetTasksService(BaseService[GetTasksQuery, GetTasksResponse]):
     
     def _build_wiql_query(self, params: GetTasksQuery) -> str:
         """
-        Build WIQL query based on parameters using hierarchical approach.
+        Build WIQL query based on parameters.
+        Uses simple query when no project selected, hierarchical when project selected.
         
         Args:
             params: Query parameters
@@ -90,6 +90,71 @@ class GetTasksService(BaseService[GetTasksQuery, GetTasksResponse]):
         Returns:
             WIQL query string
         """
+        # Check if we have project context from session memory
+        from backend.agents.memory import get_memory
+        memory = get_memory()
+        context = memory.get_context(self.session_id)
+        project_context = context.get("project_context", {})
+        
+        # If no project selected in session, use simple direct query
+        if not project_context or not project_context.get("name"):
+            return self._build_simple_query(params)
+        
+        # If project selected, use hierarchical query (Epic → Tasks structure)
+        return self._build_hierarchical_query(params)
+    
+    def _build_simple_query(self, params: GetTasksQuery) -> str:
+        """
+        Build simple WIQL query for when no specific project is selected.
+        
+        Args:
+            params: Query parameters
+            
+        Returns:
+            Simple WIQL query string
+        """
+        # Build optional filters
+        person_filter = f"AND [System.AssignedTo] CONTAINS '{params.person_name}'" if params.person_name else ""
+        state_filter = f"AND [System.State] = '{params.task_state}'" if params.task_state else ""
+        
+        query = f"""SELECT
+    [System.Id],
+    [System.WorkItemType],
+    [System.Title],
+    [System.State],
+    [System.AssignedTo],
+    [System.IterationPath],
+    [System.AreaPath],
+    [Microsoft.VSTS.Common.StackRank]
+FROM WorkItems
+WHERE
+    [System.WorkItemType] = 'Task'
+    {person_filter}
+    {state_filter}
+    AND [System.IterationPath] UNDER 'HUB GenAI\\Projetos Internos\\'
+ORDER BY [Microsoft.VSTS.Common.StackRank] ASC, [System.Id] ASC"""
+        
+        return query
+    
+    def _build_hierarchical_query(self, params: GetTasksQuery) -> str:
+        """
+        Build hierarchical WIQL query for specific project (Epic → Tasks structure).
+        
+        Args:
+            params: Query parameters
+            
+        Returns:
+            Hierarchical WIQL query string
+        """
+        # Get project name from conversation memory context
+        from backend.agents.memory import get_memory
+        memory = get_memory()
+        context = memory.get_context(self.session_id)
+        project_context = context.get("project_context", {})
+        
+        # Use project name from memory, fallback to config
+        project_name = project_context.get("name") or self.azure_config.devops_project_name
+        
         # Build optional filters
         person_filter = f"AND [Source].[System.AssignedTo] CONTAINS '{params.person_name}' AND [Target].[System.AssignedTo] CONTAINS '{params.person_name}'" if params.person_name else ""
         state_filter = f"AND [Source].[System.State] = '{params.task_state}' AND [Target].[System.State] = '{params.task_state}'" if params.task_state else ""
@@ -117,8 +182,8 @@ WHERE
     AND [Source].[System.IterationPath] UNDER 'HUB GenAI'
     AND [Source].[System.AreaPath] = 'HUB GenAI\\\\Projetos Internos'
     AND [System.Links.LinkType] = 'System.LinkTypes.Hierarchy-Forward'
-    AND [Target].[System.IterationPath] UNDER 'HUB GenAI\\\\Projetos Internos\\\\Next.IA'
-    AND [Target].[System.AreaPath] = 'HUB GenAI\\\\Projetos Internos'
+    AND [Target].[System.IterationPath] UNDER 'HUB GenAI\\Projetos Internos\\{project_name}'
+    AND [Target].[System.AreaPath] = 'HUB GenAI\\Projetos Internos'
     AND (([Target].[System.WorkItemType] IN ('Task') AND [Target].[System.State] IN ('New', 'Active', 'Blocked', 'Closed', 'Resolved')) 
          OR ([Target].[System.WorkItemType] IN ('User Story') AND [Target].[System.State] IN ('New', 'Active', 'Resolved', 'Closed')))
     {person_filter}
@@ -219,12 +284,24 @@ MODE (Recursive, ReturnMatchingChildren)"""
                 tasks.append(task)
         
         # Generate Portuguese message
+        from backend.agents.memory import get_memory
+        memory = get_memory()
+        context = memory.get_context(self.session_id)
+        project_context = context.get("project_context", {})
+        is_simple_query = not project_context or not project_context.get("name")
+        
         if len(tasks) == 0:
             message = "Nenhuma tarefa encontrada com os critérios especificados."
         elif len(tasks) == 1:
-            message = "Encontrada 1 tarefa."
+            message = "Encontrada 1 tarefa"
         else:
-            message = f"Encontradas {len(tasks)} tarefas."
+            message = f"Encontradas {len(tasks)} tarefas"
+            
+        # Add scope context
+        if is_simple_query:
+            message += " em todos os projetos."
+        else:
+            message += " do projeto selecionado."
         
         # Add filter info to message if filters were applied
         if params.person_name:

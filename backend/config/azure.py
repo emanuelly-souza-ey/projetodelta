@@ -49,6 +49,7 @@ class AzureConfig:
         self.devops_url = os.getenv("AZURE_DEVOPS_URL")
         self.devops_token = os.getenv("AZURE_DEVOPS_TOKEN")
         self.devops_project_id = os.getenv("AZURE_PROJECT_ID", "e4005fd0-7b95-4391-8486-c4b21c935b2e")
+        self.devops_project_name = os.getenv("AZURE_PROJECT_NAME", "Next.IA")#
         
         # Validate required credentials
         self._validate_credentials()

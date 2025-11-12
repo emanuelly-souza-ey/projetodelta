@@ -221,22 +221,50 @@ async def fetch_work_item_details(service, config, work_item_ids):
         return []
 
 
+async def fetch_simple_work_item_details(service, config, work_item_ids):
+    """Fetch details for simple query comparison."""
+    try:
+        ids_str = ",".join(str(id) for id in work_item_ids)
+        project_id = config.devops_project_id
+        url = config.get_devops_url(project_id) + f"/_apis/wit/workitems?ids={ids_str}&api-version=7.1"
+        headers = config.get_devops_headers()
+        
+        response = service.make_request(method="GET", url=url, headers=headers)
+        data = response.json()
+        work_items = data.get("value", [])
+        
+        for item in work_items:
+            fields = item.get("fields", {})
+            assigned_to = fields.get('System.AssignedTo', {})
+            assigned_name = assigned_to.get('displayName', 'Unassigned') if assigned_to else 'Unassigned'
+            
+            print(f"  ✅ ID: {item.get('id')} | {fields.get('System.Title', 'No title')[:50]}... | {assigned_name}")
+        
+        return work_items
+        
+    except Exception as e:
+        print(f"❌ Error fetching simple work item details: {e}")
+        return []
+
+
 async def test_simple_query():
     """Test a simpler query for comparison."""
     
     simple_query = """SELECT
     [System.Id],
-    [System.WorkItemType],
     [System.Title],
     [System.State],
+    [System.WorkItemType],
     [System.AssignedTo]
 FROM WorkItems
 WHERE
-    [System.WorkItemType] IN ('Task', 'Bug', 'User Story')
-    AND [System.AreaPath] UNDER 'HUB GenAI'
+    [System.WorkItemType] = 'Task'
+    AND [System.IterationPath] UNDER 'HUB GenAI'
 ORDER BY [System.Id] ASC"""
     
     print(f"\n\n=== TESTING SIMPLE QUERY FOR COMPARISON ===")
+    print("🎯 This is the MUCH SIMPLER approach!")
+    print("Instead of complex hierarchical workitemLinks...")
     print(f"Query: {simple_query}")
     
     # Get config and create service
@@ -262,12 +290,15 @@ ORDER BY [System.Id] ASC"""
         # Parse response
         data = response.json()
         work_items = data.get("workItems", [])
-        print(f"Simple query found: {len(work_items)} work items")
+        print(f"🎯 SIMPLE QUERY RESULT: {len(work_items)} work items found!")
+        print("📊 This query is DIRECT - no complex relations needed!")
         
         if work_items:
-            print("First 3 items:")
-            for item in work_items[:3]:
-                print(f"  - ID: {item.get('id')}")
+            print("📝 First 5 Active Tasks from Next.IA:")
+            # Get details for comparison
+            await fetch_simple_work_item_details(service, config, [item.get('id') for item in work_items[:5]])
+        else:
+            print("❌ No tasks found with simple query - check filters!")
         
         return data
         
@@ -277,12 +308,38 @@ ORDER BY [System.Id] ASC"""
 
 
 if __name__ == "__main__":
-    print("Testing exact WIQL query from user...")
+    print("🔬 TESTING BOTH QUERY APPROACHES - COMPLEX vs SIMPLE!")
+    print("="*70)
     
-    # Test the exact query
-    asyncio.run(test_exact_query())
+    # Test the complex hierarchical query
+    print("1️⃣ COMPLEX HIERARCHICAL QUERY (workitemLinks)")
+    complex_result = asyncio.run(test_exact_query())
     
-    # Test simple query for comparison
-    #asyncio.run(test_simple_query())
+    print("\n" + "="*70)
     
-    print("\n🎉 Test completed!")
+    # Test simple direct query for comparison  
+    print("2️⃣ SIMPLE DIRECT QUERY (workitems)")
+    simple_result = asyncio.run(test_simple_query())
+    
+    print("\n" + "="*70)
+    print("🏆 COMPARISON SUMMARY:")
+    
+    if complex_result and simple_result:
+        # Compare results
+        complex_relations = len(complex_result.get("workItemRelations", []))
+        complex_items = len(complex_result.get("workItems", []))
+        simple_items = len(simple_result.get("workItems", []))
+        
+        print(f"📊 Complex Query: {complex_relations} relations, {complex_items} direct items")
+        print(f"📊 Simple Query:  {simple_items} direct items")
+        
+        if simple_items > 0:
+            print("✅ SIMPLE QUERY WINS! 🎉")
+            print("   - Much easier to implement")
+            print("   - Direct results, no complex relations")
+            print("   - Faster execution")
+            print("   - Easier to understand and maintain")
+        else:
+            print("🤔 Complex query might be needed for your specific hierarchy")
+    
+    print("\n🎭 Moral of the story: Sometimes simple is better! 😄")
