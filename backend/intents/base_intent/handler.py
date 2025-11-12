@@ -146,14 +146,17 @@ class BaseIntentHandler:
             # 4. Convert to dictionary (handle both dict and Pydantic models)
             data = _to_dict(response_data)
             
-            # 5. Save to memory (preserving project context)
+            # 5. Save to memory (preserving project context, except for project_selection intent)
+            # For project_selection, let the new project context from service take precedence
+            preserve_context = project_context if self.intent_name != "project_selection" else None
+            
             new_conversation_id = self.memory.save(
                 conversation_id or str(uuid4()),
                 query=query,
                 intent=self.__class__.__name__,
                 params=params_dict,
                 result=data,
-                project_context=project_context
+                project_context=preserve_context
             )
             
             elapsed_time = time.time() - start_time
@@ -176,13 +179,18 @@ class BaseIntentHandler:
                     exc_info=True
                 )
             
-            # Return error in structured format
+            # Return error in structured format with debug info
             error_id = conversation_id or str(uuid4())
             return {
                 "data": {
                     "error": str(e),
                     "error_type": type(e).__name__,
-                    "message": f"Error processing query: {str(e)}"
+                    "message": f"Error processing query: {str(e)}",
+                    "debug_info": {
+                        "original_query": query,
+                        "intent": self.intent_name,
+                        "elapsed_time": f"{elapsed_time:.2f}s"
+                    }
                 },
                 "conversation_id": error_id,
                 "success": False

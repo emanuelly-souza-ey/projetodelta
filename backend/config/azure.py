@@ -114,8 +114,14 @@ class AzureConfig:
         Returns:
             Base URL for Azure DevOps API
         """
-        pid = project_id or self.devops_project_id
-        return f"{self.devops_url}/{pid}"
+        if not self.devops_url:
+            raise ValueError("Azure DevOps URL not configured")
+            
+        pid = self.devops_project_id
+        #pid = project_id or self.devops_project_id
+        # Ensure no double slashes by stripping trailing slash from base URL
+        base_url = self.devops_url.rstrip('/')
+        return f"{base_url}/{pid}"
     
     def create_chat_completion(
         self,

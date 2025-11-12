@@ -30,7 +30,7 @@ from . import worked_hours
 from . import project_progress
 from . import delayed_tasks
 from . import project_team
-from . import daily_activities
+from . import get_tasks
 from . import project_selection  # Project selection - select specific project
 from . import project_search  # Project search - explore and discover projects
 from . import available_intents  # Help and available actions
