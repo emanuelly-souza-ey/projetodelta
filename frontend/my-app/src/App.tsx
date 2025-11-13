@@ -1,12 +1,9 @@
 import { useState } from 'react'; 
 import styled from 'styled-components'; 
 import ChatContainer from './components/chat/ChatContainer'; 
-import Storybook from './pages/Storybook'; 
-import { AutocompleteConfig } from './types/autocomplete'; 
+import type { AutocompleteConfig } from './types/autocomplete'; 
 
 function App() {
-  const [showStorybook, setShowStorybook] = useState(false);
-
   const autocompleteConfigs: AutocompleteConfig[] = [
     {
       trigger: "@",
@@ -37,85 +34,99 @@ function App() {
   ];
 
   return ( 
-    <Container> 
-      <FloatingButton onClick={() => setShowStorybook(!showStorybook)}> 
-        {showStorybook ? 'Show Chat' : 'Show Storybook'} 
-      </FloatingButton> 
-      {!showStorybook && ( 
-        <HeaderSection> 
-          <Title>Agil.AI</Title> 
-          <Subtitle> Texto de descrição do agente </Subtitle> 
-        </HeaderSection> 
-      )} 
-      {showStorybook ? ( 
-        <Storybook /> 
-      ) : ( 
-        <ChatWrapper> 
-          <ChatContainer autocompleteConfigs={autocompleteConfigs} title="" /> 
-        </ChatWrapper> 
-      )} 
-    </Container> 
-  ); 
+  <Container> 
+    <HeaderSection> 
+      <Title>
+        <BoldWhite>Bem-vindo </BoldWhite> 
+        <NormalWhite>ao </NormalWhite>
+        <Yellow>Agil.AI</Yellow>
+        </Title> 
+      <Subtitle>Seu assistente inteligente para insights ágeis e decisões mais rápidas.
+        <br />
+        Conectado ao Azure DevOps, o Agil.AI apoia PMOs no acompanhamento de projetos, análise de resultados e aumento da eficiência nas entregas, tudo em um só lugar!
+      </Subtitle> 
+    </HeaderSection> 
+
+    <ChatWrapper> 
+      <ChatContainer autocompleteConfigs={autocompleteConfigs} title="" /> 
+    </ChatWrapper> 
+  </Container> 
+);
 } 
 
 export default App; 
 
 const Container = styled.div` 
-  background: #0d0f12; 
-  min-height: 100vh; 
-  height: auto;
-  width: 100%; 
-  overflow: visible;
-  color: white; 
-  padding: 40px 20px; 
-  display: flex; 
-  flex-direction: column; 
-  align-items: center; 
+  background: #0d0f12;
+  height: 100vh;
+  width: 100%;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding-top: 100px;
+  position: relative;
 `; 
 
 const HeaderSection = styled.div` 
   text-align: center; 
-  margin-bottom: 40px; 
+  margin: -20px auto 24px;
   max-width: 700px; 
 `; 
 
 const Title = styled.h1` 
-  font-size: 3.2rem; 
+  font-size: 3rem; 
   font-weight: 700; 
-  color: #f7d404; 
-  margin-bottom: 12px; 
-  text-align: center; 
+  margin-bottom: 10px; 
 `; 
 
+const BoldWhite = styled.span`
+  color: white;
+  font-weight: bold;
+`;
+
+const NormalWhite = styled.span`
+  color: white;
+  font-weight: normal;
+`;
+
+const Yellow = styled.span`
+  color: #f7d404; 
+  font-weight: bold;
+`;
+
 const Subtitle = styled.p` 
-  font-size: 1.2rem; 
-  color: #d1d1d1; 
+  font-size: 1.1rem; 
+  color: #cfcfcf; 
   line-height: 1.5; 
 `; 
 
 const ChatWrapper = styled.div` 
-  width: 100%; 
-  max-width: 900px; 
-  max-height: 80vh;
-  height: auto;
-  overflow-y: auto;
-  padding-right: 4px;
-`; 
+  width: 100%;
+  max-width: 800px;
+  flex: 1;
+  background: transparent;
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 
-const FloatingButton = styled.button` 
-  position: fixed; 
-  top: 12px; 
-  right: 12px; 
-  z-index: 1000; 
-  padding: 10px 20px; 
-  background-color: #007bff; 
-  color: white; 
-  border: none; 
-  border-radius: 6px; 
-  cursor: pointer; 
-  font-size: 0.95rem; 
-  transition: 0.2s ease; 
-  &:hover { 
-    background-color: #005ecb; 
-  } 
+  & > * {
+    flex: 1;
+    overflow: y;
+    scrollbar-width: thin;
+    scrollbar-color: #444 transparent;
+
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+      background-color: #444;
+      border-radius: 10px;
+    }
 `;
