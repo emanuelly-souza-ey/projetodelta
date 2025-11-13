@@ -128,8 +128,21 @@ class BaseService(ABC, Generic[TParams, TResponse]):
         
         except requests.exceptions.HTTPError as e:
             status_code = e.response.status_code if e.response else "unknown"
+            
+            # Log detailed error info including request details
+            error_details = {
+                "method": method,
+                "url": url,
+                "status_code": status_code,
+                "request_body": kwargs.get('json', kwargs.get('data', 'No body')),
+                "headers": kwargs.get('headers', {}),
+                "response_text": e.response.text if e.response else "No response text"
+            }
+            
             if self.logger:
-                self.logger.error(f"HTTP error {status_code}: {method} {url}", exc_info=True)
+                self.logger.error(f"HTTP error {status_code}: {method} {url}")
+                self.logger.error(f"Request details: {error_details}")
+            
             raise Exception(
                 f"HTTP error {status_code} for {url}: {str(e)}"
             ) from e

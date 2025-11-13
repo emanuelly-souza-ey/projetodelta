@@ -49,6 +49,7 @@ class AzureConfig:
         self.devops_url = os.getenv("AZURE_DEVOPS_URL")
         self.devops_token = os.getenv("AZURE_DEVOPS_TOKEN")
         self.devops_project_id = os.getenv("AZURE_PROJECT_ID", "e4005fd0-7b95-4391-8486-c4b21c935b2e")
+        self.devops_project_name = os.getenv("AZURE_PROJECT_NAME", "Next.IA")#
         
         # Validate required credentials
         self._validate_credentials()
@@ -114,8 +115,14 @@ class AzureConfig:
         Returns:
             Base URL for Azure DevOps API
         """
-        pid = project_id or self.devops_project_id
-        return f"{self.devops_url}/{pid}"
+        if not self.devops_url:
+            raise ValueError("Azure DevOps URL not configured")
+            
+        pid = self.devops_project_id
+        #pid = project_id or self.devops_project_id
+        # Ensure no double slashes by stripping trailing slash from base URL
+        base_url = self.devops_url.rstrip('/')
+        return f"{base_url}/{pid}"
     
     def create_chat_completion(
         self,

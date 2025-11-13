@@ -53,7 +53,6 @@ class AvailableActionsService(BaseService):
             "message": (
                 f"🎯 Aqui está o que posso fazer por você:\n\n"
                 f"{intent_list}\n\n"
-                f"💡 **Dica**: Pergunte qualquer coisa sobre o Azure DevOps do seu projeto!"
             )
         }
 

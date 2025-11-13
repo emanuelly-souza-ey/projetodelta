@@ -146,6 +146,7 @@ class ProjectSelectionService(BaseService[ProjectSelectionQuery, ProjectSelectio
         SELECT [System.Id], [System.Title], [System.State], [System.Description]
         FROM workitems
         WHERE [System.WorkItemType] = 'Epic'
+        AND [System.TeamProject] = 'HUB GenAI'
         ORDER BY [System.ChangedDate] DESC
         """
         
