@@ -117,6 +117,12 @@ cd frontend\my-app
 npm install
 ```
 
+Configure as variáveis de ambiente criando um arquivo `.env` em `frontend/my-app`:
+
+```env
+VITE_API_URL=http://localhost:8000
+```
+
 ## ▶️ Executando o Projeto
 
 ### Backend (API)
