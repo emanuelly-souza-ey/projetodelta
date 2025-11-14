@@ -90,7 +90,8 @@ class ProjectSelectionService(BaseService[ProjectSelectionQuery, ProjectSelectio
             memory.update_project_context(
                 self.session_id,
                 project.id,
-                project.name
+                project.name,
+                epic_id=int(project.id) if project.id else None
             )
     
     async def _fallback_to_search(self, project_name: str) -> Optional[List[EpicProject]]:
@@ -147,6 +148,7 @@ class ProjectSelectionService(BaseService[ProjectSelectionQuery, ProjectSelectio
         FROM workitems
         WHERE [System.WorkItemType] = 'Epic'
         AND [System.TeamProject] = 'HUB GenAI'
+        AND [System.AreaPath] = 'HUB GenAI\\Projeto DELTA'
         ORDER BY [System.ChangedDate] DESC
         """
         

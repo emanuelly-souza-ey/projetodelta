@@ -57,12 +57,24 @@ class TaskItem(BaseModel):
     description: Optional[str] = Field(None, description="Task description")
 
 
+class EpicHierarchy(BaseModel):
+    """Epic with its child tasks in hierarchy."""
+    
+    epic_id: int = Field(..., description="Epic ID")
+    epic_title: str = Field(..., description="Epic title")
+    epic_state: str = Field(..., description="Epic state")
+    tasks: List[TaskItem] = Field(
+        default_factory=list,
+        description="Tasks under this Epic"
+    )
+
+
 class GetTasksResponse(BaseResponse):
     """Response for get tasks queries."""
     
     tasks: List[TaskItem] = Field(
         default_factory=list,
-        description="List of tasks matching the criteria"
+        description="List of tasks matching the criteria (flat list)"
     )
     
     total_count: int = Field(
@@ -88,4 +100,14 @@ class GetTasksResponse(BaseResponse):
     message: str = Field(
         "",
         description="Human-readable summary message"
+    )
+    
+    hierarchy: Optional[List[EpicHierarchy]] = Field(
+        None,
+        description="Hierarchical structure of Epics with their tasks"
+    )
+    
+    scope: str = Field(
+        "all",
+        description="Query scope: 'all' for all DELTA, 'epic' for specific Epic"
     )

@@ -66,7 +66,9 @@ class GetTasksService(BaseService[GetTasksQuery, GetTasksResponse]):
                     tasks_by_person={},
                     task_count_by_person={},
                     filtered_by=self._build_filter_summary(params),
-                    message="Nenhuma tarefa encontrada com os critérios especificados."
+                    message="Nenhuma tarefa encontrada com os critérios especificados.",
+                    hierarchy=None,
+                    scope="all"
                 )
             
             # Get work item details
@@ -82,7 +84,10 @@ class GetTasksService(BaseService[GetTasksQuery, GetTasksResponse]):
     def _build_wiql_query(self, params: GetTasksQuery) -> str:
         """
         Build WIQL query based on parameters.
-        Uses simple query when no project selected, hierarchical when project selected.
+        
+        Two modes:
+        1. No Epic selected: Query all tasks in DELTA area
+        2. Epic selected: Query only tasks under that Epic (hierarchical)
         
         Args:
             params: Query parameters
@@ -90,28 +95,30 @@ class GetTasksService(BaseService[GetTasksQuery, GetTasksResponse]):
         Returns:
             WIQL query string
         """
-        # Check if we have project context from session memory
+        # Check if we have Epic context from session memory
         from backend.agents.memory import get_memory
         memory = get_memory()
         context = memory.get_context(self.session_id)
         project_context = context.get("project_context", {})
         
-        # If no project selected in session, use simple direct query
-        if not project_context or not project_context.get("name"):
-            return self._build_simple_query(params)
+        epic_id = project_context.get("epic_id")
         
-        # If project selected, use hierarchical query (Epic → Tasks structure)
-        return self._build_hierarchical_query(params)
+        # Mode 1: No Epic selected - query all DELTA
+        if not epic_id:
+            return self._build_all_delta_query(params)
+        
+        # Mode 2: Epic selected - query specific Epic hierarchy
+        return self._build_epic_hierarchy_query(params, epic_id)
     
-    def _build_simple_query(self, params: GetTasksQuery) -> str:
+    def _build_all_delta_query(self, params: GetTasksQuery) -> str:
         """
-        Build simple WIQL query for when no specific project is selected.
+        Build query to get all tasks from Projeto DELTA area (no Epic filter).
         
         Args:
             params: Query parameters
             
         Returns:
-            Simple WIQL query string
+            WIQL query string
         """
         # Build optional filters
         person_filter = f"AND [System.AssignedTo] CONTAINS '{params.person_name}'" if params.person_name else ""
@@ -123,73 +130,60 @@ class GetTasksService(BaseService[GetTasksQuery, GetTasksResponse]):
     [System.Title],
     [System.State],
     [System.AssignedTo],
+    [Microsoft.VSTS.Scheduling.RemainingWork],
     [System.IterationPath],
     [System.AreaPath],
     [Microsoft.VSTS.Common.StackRank]
 FROM WorkItems
 WHERE
     [System.WorkItemType] = 'Task'
+    AND [System.AreaPath] = 'HUB GenAI\\\\Projeto DELTA'
     {person_filter}
     {state_filter}
-    AND [System.IterationPath] UNDER 'HUB GenAI\\Projetos Internos\\'
 ORDER BY [Microsoft.VSTS.Common.StackRank] ASC, [System.Id] ASC"""
         
         return query
     
-    def _build_hierarchical_query(self, params: GetTasksQuery) -> str:
+    def _build_epic_hierarchy_query(self, params: GetTasksQuery, epic_id: int) -> str:
         """
-        Build hierarchical WIQL query for specific project (Epic → Tasks structure).
+        Build hierarchical query to get tasks under specific Epic.
+        Uses workitemLinks to traverse Epic → Feature → User Story → Task hierarchy.
         
         Args:
             params: Query parameters
+            epic_id: Epic work item ID
             
         Returns:
             Hierarchical WIQL query string
         """
-        # Get project name from conversation memory context
-        from backend.agents.memory import get_memory
-        memory = get_memory()
-        context = memory.get_context(self.session_id)
-        project_context = context.get("project_context", {})
-        
-        # Use project name from memory, fallback to config
-        project_name = project_context.get("name") or self.azure_config.devops_project_name
-        
         # Build optional filters
-        person_filter = f"AND [Source].[System.AssignedTo] CONTAINS '{params.person_name}' AND [Target].[System.AssignedTo] CONTAINS '{params.person_name}'" if params.person_name else ""
-        state_filter = f"AND [Source].[System.State] = '{params.task_state}' AND [Target].[System.State] = '{params.task_state}'" if params.task_state else ""
+        person_filter = ""
+        if params.person_name:
+            person_filter = f"AND [Target].[System.AssignedTo] CONTAINS '{params.person_name}'"
         
-        # Build complete WIQL query as mega string
+        state_filter = ""
+        if params.task_state:
+            state_filter = f"AND [Target].[System.State] = '{params.task_state}'"
+        
         query = f"""SELECT
     [System.Id],
-    [System.WorkItemType], 
+    [System.WorkItemType],
     [System.Title],
     [System.State],
     [System.AssignedTo],
     [Microsoft.VSTS.Scheduling.RemainingWork],
-    [System.TeamProject],
-    [System.Tags],
-    [Microsoft.VSTS.Common.StackRank],
-    [System.AreaId],
-    [System.IterationPath],
-    [System.IterationId], 
     [System.AreaPath],
-    [Microsoft.VSTS.Common.Activity]
+    [System.IterationPath]
 FROM workitemLinks
 WHERE
-    (([Source].[System.WorkItemType] IN ('Task', 'Bug') AND [Source].[System.State] IN ('New', 'Active', 'Blocked', 'Closed', 'Resolved')) 
-     OR ([Source].[System.WorkItemType] IN ('User Story') AND [Source].[System.State] IN ('New', 'Active', 'Resolved', 'Closed')))
-    AND [Source].[System.IterationPath] UNDER 'HUB GenAI'
-    AND [Source].[System.AreaPath] = 'HUB GenAI\\\\Projetos Internos'
+    [Source].[System.Id] = {epic_id}
     AND [System.Links.LinkType] = 'System.LinkTypes.Hierarchy-Forward'
-    AND [Target].[System.IterationPath] UNDER 'HUB GenAI\\Projetos Internos\\{project_name}'
-    AND [Target].[System.AreaPath] = 'HUB GenAI\\Projetos Internos'
-    AND (([Target].[System.WorkItemType] IN ('Task') AND [Target].[System.State] IN ('New', 'Active', 'Blocked', 'Closed', 'Resolved')) 
-         OR ([Target].[System.WorkItemType] IN ('User Story') AND [Target].[System.State] IN ('New', 'Active', 'Resolved', 'Closed')))
+    AND [Target].[System.WorkItemType] IN ('Task', 'Bug', 'User Story', 'Feature')
+    AND [Target].[System.AreaPath] = 'HUB GenAI\\\\Projeto DELTA'
     {person_filter}
     {state_filter}
-ORDER BY [Microsoft.VSTS.Common.StackRank] ASC, [System.Id] ASC
-MODE (Recursive, ReturnMatchingChildren)"""
+ORDER BY [System.Id] ASC
+MODE (Recursive)"""
         
         return query
     
@@ -245,26 +239,46 @@ MODE (Recursive, ReturnMatchingChildren)"""
     ) -> GetTasksResponse:
         """
         Process work items using existing WorkItem model and filter to return only Tasks.
+        Builds hierarchy structure when Epic is selected.
         
         Args:
             work_items: Raw work item data from Azure DevOps
             params: Original query parameters
             
         Returns:
-            Processed GetTasksResponse
+            Processed GetTasksResponse with flat list and optional hierarchy
         """
         from backend.models.devops_models import WorkItem
+        from backend.agents.memory import get_memory
+        from .models import EpicHierarchy
+        
+        memory = get_memory()
+        context = memory.get_context(self.session_id or "")
+        project_context = context.get("project_context", {})
+        epic_id = project_context.get("epic_id")
+        
+        # Determine scope
+        scope = "epic" if epic_id else "all"
         
         tasks = []
+        epic_info = None
         
         for item in work_items:
             # Use existing WorkItem model for data transformation
             work_item = WorkItem.from_json(item)
             
-            # Filter to return only Tasks (not User Stories, Bugs, etc.)
             fields = item.get("fields", {})
             work_item_type = fields.get("System.WorkItemType")
             
+            # Store Epic info when in epic mode
+            if work_item_type == "Epic" and epic_id and work_item.id == epic_id:
+                epic_info = {
+                    "id": work_item.id or 0,
+                    "title": work_item.title or "Untitled",
+                    "state": work_item.state or "Unknown"
+                }
+            
+            # Collect only Tasks
             if work_item_type == "Task":
                 # Convert WorkItem to TaskItem for response
                 assigned_to_display = None
@@ -284,12 +298,6 @@ MODE (Recursive, ReturnMatchingChildren)"""
                 tasks.append(task)
         
         # Generate Portuguese message
-        from backend.agents.memory import get_memory
-        memory = get_memory()
-        context = memory.get_context(self.session_id)
-        project_context = context.get("project_context", {})
-        is_simple_query = not project_context or not project_context.get("name")
-        
         if len(tasks) == 0:
             message = "Nenhuma tarefa encontrada com os critérios especificados."
         elif len(tasks) == 1:
@@ -298,10 +306,11 @@ MODE (Recursive, ReturnMatchingChildren)"""
             message = f"Encontradas {len(tasks)} tarefas"
             
         # Add scope context
-        if is_simple_query:
-            message += " em todos os projetos."
+        if scope == "all":
+            message += " em todos os projetos do DELTA."
         else:
-            message += " do projeto selecionado."
+            epic_name = project_context.get("project_name", "projeto")
+            message += f" do {epic_name}."
         
         # Add filter info to message if filters were applied
         if params.person_name:
@@ -321,11 +330,23 @@ MODE (Recursive, ReturnMatchingChildren)"""
             tasks_by_person[person].append(task.title)
             task_count_by_person[person] += 1
         
+        # Build hierarchy if Epic selected
+        hierarchy = None
+        if scope == "epic" and epic_info:
+            hierarchy = [EpicHierarchy(
+                epic_id=epic_info["id"],
+                epic_title=epic_info["title"],
+                epic_state=epic_info["state"],
+                tasks=tasks
+            )]
+        
         return GetTasksResponse(
             tasks=tasks,
             total_count=len(tasks),
             tasks_by_person=tasks_by_person,
             task_count_by_person=task_count_by_person,
             filtered_by=self._build_filter_summary(params),
-            message=message
+            message=message,
+            hierarchy=hierarchy,
+            scope=scope
         )

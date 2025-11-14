@@ -61,6 +61,7 @@ class ProjectSearchService(BaseService[ProjectSearchQuery, ProjectSearchResponse
         FROM workitems
         WHERE [System.WorkItemType] = 'Epic'
         AND [System.TeamProject] = 'HUB GenAI'
+        AND [System.AreaPath] = 'HUB GenAI\\Projeto DELTA'
         ORDER BY [System.ChangedDate] DESC
         """
         

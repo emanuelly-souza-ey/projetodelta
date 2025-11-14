@@ -156,3 +156,35 @@ async def list_conversations():
         "conversations": conversations,
         "count": len(conversations)
     }
+
+
+@router.get("/session/{conversation_id}/project")
+async def get_session_project(conversation_id: str):
+    """
+    Get project ID from chat session.
+    
+    Args:
+        conversation_id: ID of conversation
+        
+    Returns:
+        Project information from session
+    """
+    memory = get_memory()
+    context = memory.get_context(conversation_id)
+    project_context = context.get("project_context", {})
+    
+    if not project_context or not project_context.get("project_id"):
+        return {
+            "conversation_id": conversation_id,
+            "project_id": None,
+            "project_name": None,
+            "message": "Nenhum projeto selecionado nesta sessão"
+        }
+    
+    return {
+        "conversation_id": conversation_id,
+        "project_id": project_context.get("project_id"),
+        "project_name": project_context.get("project_name"),
+        "scope": project_context.get("scope"),
+        "message": "Projeto encontrado"
+    }

@@ -7,6 +7,8 @@ from datetime import datetime
 import pandas as pd
 
 from backend.models.devops_models import WorkItem, IdentityRef
+from backend.config.azure import get_azure_config
+config = get_azure_config()
     
 class Project(BaseModel):
     #Tambien es un WorkItem pero es un epic 
@@ -93,7 +95,7 @@ class EpicProject(Project):
             teamMembers={}
         )
     
-    def getTasks(self, headers, azure_path="https://dev.azure.com/FSO-DnA-Devops", azure_project_id="e4005fd0-7b95-4391-8486-c4b21c935b2e"):
+    def getTasks(self, headers, azure_path="https://dev.azure.com/FSO-DnA-Devops", azure_project_id=config.devops_project_id):
         print("Va a obtener las tareas")
         if len(self.tasks) > 0:#si ya se obtuvieron las tareas
             return self.tasks
@@ -113,7 +115,7 @@ class EpicProject(Project):
         dfs(self.root)
         return self.tasks
     
-    def getTeamMembers(self, headers, azure_path="https://dev.azure.com/FSO-DnA-Devops", azure_project_id="e4005fd0-7b95-4391-8486-c4b21c935b2e"):
+    def getTeamMembers(self, headers, azure_path="https://dev.azure.com/FSO-DnA-Devops", azure_project_id=config.devops_project_id):
         if len(self.teamMembers) > 0:
             return self.teamMembers
         
@@ -131,7 +133,7 @@ class EpicProject(Project):
         dfs(self.root)
         return List[self.teamMembers]
 
-    def getRelationships(self, headers, azure_path="https://dev.azure.com/FSO-DnA-Devops", azure_project_id="e4005fd0-7b95-4391-8486-c4b21c935b2e"):
+    def getRelationships(self, headers, azure_path="https://dev.azure.com/FSO-DnA-Devops", azure_project_id=config.devops_project_id):
         print("viendo relaciones")
         if not self.root:
             print("Esta creando el root")
@@ -149,7 +151,7 @@ class EpicProject(Project):
             self.root.getInfo(5,headers=headers,azure_path=azure_path,azure_project_id=azure_project_id)
 
     @classmethod
-    def get_from_request(cls, project_id: str, headers, azure_path="https://dev.azure.com/FSO-DnA-Devops", azure_project_id="e4005fd0-7b95-4391-8486-c4b21c935b2e"):
+    def get_from_request(cls, project_id: str, headers, azure_path="https://dev.azure.com/FSO-DnA-Devops", azure_project_id=config.devops_project_id):
         print("get from request")
         url = f"{azure_path}/{azure_project_id}/_apis/wit/workitems/{project_id}"
         response = requests.get(url, headers=headers)

@@ -20,10 +20,11 @@ class ProjectSearchExtractor(BaseExtractor[ProjectSearchQuery]):
 
         Rules:
         1. user_query: Preserve the exact user input
-        2. search_terms: Extract multiple keywords for broad searching
-           - Include technology names, domains, keywords
-           - List all relevant terms separately
-           - Can be general or specific
+        2. search_terms: Extract ONLY meaningful business/technical keywords
+           - Include: technology names, domains, business terms, project identifiers
+           - EXCLUDE: generic words like "projects", "projetos", "show", "list", "find"
+           - Extract only terms that help filter/identify specific projects
+           - Return empty list [] if no specific search terms are found
         3. filters: Extract any state/status filters if mentioned
            - Example: {{"state": "active"}} or {{"state": "closed"}}
            - Only include if explicitly mentioned
@@ -33,6 +34,9 @@ class ProjectSearchExtractor(BaseExtractor[ProjectSearchQuery]):
         - "What projects use Python and ML?" → search_terms: ["Python", "ML"]
         - "List active projects" → search_terms: [], filters: {{"state": "active"}}
         - "Find closed Delta projects" → search_terms: ["Delta"], filters: {{"state": "closed"}}
+        - "Mostre os projetos" → search_terms: []
+        - "Listar projetos ativos" → search_terms: [], filters: {{"state": "active"}}
+        - "Projetos com IA" → search_terms: ["IA"]
 
         User query: {query}
         """

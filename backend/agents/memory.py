@@ -120,6 +120,7 @@ class ConversationMemory:
         conversation_id: str,
         project_id: Optional[str] = None,
         project_name: Optional[str] = None,
+        epic_id: Optional[int] = None,
         scope: str = "specific"
     ) -> None:
         """
@@ -128,7 +129,8 @@ class ConversationMemory:
         Args:
             conversation_id: Conversation ID
             project_id: Project ID
-            project_name: Project name
+            project_name: Project name (Epic name)
+            epic_id: Epic work item ID
             scope: Project scope ('specific', 'all', 'default')
         """
         if conversation_id not in self._storage:
@@ -137,6 +139,7 @@ class ConversationMemory:
         project_context = {
             "project_id": project_id,
             "project_name": project_name,
+            "epic_id": epic_id,
             "scope": scope,
             "updated_at": datetime.now().isoformat()
         }

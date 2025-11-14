@@ -91,6 +91,7 @@ class WorkedHoursService(BaseService[WorkedHoursQuery, WorkedHoursResponse]):
             [System.ChangedDate]
         FROM workitems
         WHERE {where_clause}
+        AND [System.AreaPath] = 'HUB GenAI\\Projeto DELTA'
         ORDER BY [System.ChangedDate] DESC
         """
         

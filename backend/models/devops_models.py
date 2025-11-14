@@ -9,6 +9,9 @@ from pydantic import BaseModel, Field
 from typing import Optional, Any, Dict, List
 from datetime import datetime
 
+from backend.config.azure import get_azure_config
+config = get_azure_config()
+
 #Team member
 class IdentityRef(BaseModel):
     _links: Optional[Any] = None
@@ -130,7 +133,7 @@ class WorkItem(BaseModel):
                 "System.State",
                 "Microsoft.VSTS.Scheduling.TargetDate"]
     
-    def getInfo(self, levels:int, headers, azure_path="https://dev.azure.com/FSO-DnA-Devops", azure_project_id="e4005fd0-7b95-4391-8486-c4b21c935b2e"):
+    def getInfo(self, levels:int, headers, azure_path="https://dev.azure.com/FSO-DnA-Devops", azure_project_id=config.devops_project_id):
         #The only thing that needs is id to query all
         print(f"va a obtener info de {self.id}")
         base_url = f"{azure_path}/{azure_project_id}/_apis/wit/workItems/{self.id}?api-version=7.0"
