@@ -1,19 +1,55 @@
 import { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import ChatContainer from './components/chat/ChatContainer';
+import { chatService } from './services/chatService';
 import type { AutocompleteConfig } from './types/autocomplete';
 
 function App() {
   const [hasMessages, setHasMessages] = useState(false);
+  const [teamMembers, setTeamMembers] = useState<string[]>(["Alice", "Bob", "Charlie", "Diana"]);
+  const [projects, setProjects] = useState<string[]>(["ProjectAlpha", "ProjectBeta", "ProjectGamma"]);
 
   useEffect(() => {
     console.log("API URL:", import.meta.env.VITE_API_URL);
+
+    // Load team members from backend
+    const loadTeamMembers = async () => {
+      try {
+        const response = await chatService.getTeamMembers();
+        const memberNames = response.members.map(member => member.name);
+        if (memberNames.length > 0) {
+          setTeamMembers(memberNames);
+          console.log("Team members loaded:", memberNames);
+        }
+      } catch (error) {
+        console.error("Failed to load team members:", error);
+        // Keep default members if fetch fails
+      }
+    };
+
+    // Load projects from backend
+    const loadProjects = async () => {
+      try {
+        const response = await chatService.getProjects();
+        const projectNames = response.projects.map(p => p.name);
+        if (projectNames.length > 0) {
+          setProjects(projectNames);
+          console.log("Projects loaded:", projectNames);
+        }
+      } catch (error) {
+        console.error("Failed to load projects:", error);
+        // Keep default projects if fetch fails
+      }
+    };
+
+    loadTeamMembers();
+    loadProjects();
   }, []);
 
   const autocompleteConfigs: AutocompleteConfig[] = [
     {
       trigger: "@",
-      items: ["Alice", "Bob", "Charlie", "Diana"],
+      items: teamMembers,
       buttonLabel: "👤 Mention",
       onInsert: (user, msg) => {
         const lastAtIndex = msg.lastIndexOf("@");
@@ -26,7 +62,7 @@ function App() {
     },
     {
       trigger: "#",
-      items: ["ProjectAlpha", "ProjectBeta", "ProjectGamma"],
+      items: projects,
       buttonLabel: "📁 Project",
       onInsert: (project, msg) => {
         const lastHashIndex = msg.lastIndexOf("#");

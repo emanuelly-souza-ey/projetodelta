@@ -112,6 +112,71 @@ class ChatService {
             throw new Error('Erro desconhecido ao listar conversas');
         }
     }
+
+    /**
+     * Get team members
+     * @param conversationId - Optional conversation ID for context
+     */
+    async getTeamMembers(conversationId?: string): Promise<{
+        members: Array<{ id: string | null; name: string; email: string | null; role: string | null }>;
+        total_count: number;
+        message: string;
+        conversation_id: string;
+    }> {
+        try {
+            const url = conversationId
+                ? `${this.baseUrl}/team/members?conversation_id=${conversationId}`
+                : `${this.baseUrl}/team/members`;
+
+            const response = await fetch(url);
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(
+                    `Erro ao buscar membros: ${response.status} - ${errorData.detail || 'Erro desconhecido'}`
+                );
+            }
+
+            return await response.json();
+        } catch (error) {
+            if (error instanceof Error) {
+                throw new Error(`Falha ao buscar membros: ${error.message}`);
+            }
+            throw new Error('Erro desconhecido ao buscar membros');
+        }
+    }
+
+    /**
+     * Get projects
+     * @param state - Optional state filter (Active, Closed, New)
+     */
+    async getProjects(state?: string): Promise<{
+        projects: Array<{ id: number; name: string; state: string | null; description: string | null }>;
+        total_count: number;
+        message: string;
+    }> {
+        try {
+            const url = state
+                ? `${this.baseUrl}/projects/?state=${state}`
+                : `${this.baseUrl}/projects/`;
+
+            const response = await fetch(url);
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(
+                    `Erro ao buscar projetos: ${response.status} - ${errorData.detail || 'Erro desconhecido'}`
+                );
+            }
+
+            return await response.json();
+        } catch (error) {
+            if (error instanceof Error) {
+                throw new Error(`Falha ao buscar projetos: ${error.message}`);
+            }
+            throw new Error('Erro desconhecido ao buscar projetos');
+        }
+    }
 }
 
 // Export singleton instance

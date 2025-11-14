@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparación: Burbujas vs Mensajes Amplios</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #1a1a1a;
+            color: #e0e0e0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #ffe600;
+            margin-bottom: 40px;
+            font-size: 2.5em;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .option-container {
+            background: #242424;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .option-title {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            color: #ffe600;
+            text-align: center;
+        }
+
+        .chat-area {
+            background: #1e1e1e;
+            border-radius: 16px;
+            padding: 20px;
+            min-height: 600px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        /* ==================== OPCIÓN 1: BURBUJAS (80% ancho) ==================== */
+        .chat-bubbles .message {
+            margin-bottom: 16px;
+            display: flex;
+            flex-direction: column;
+            animation: slideIn 0.3s ease;
+        }
+
+        .chat-bubbles .message.user {
+            align-items: flex-end;
+        }
+
+        .chat-bubbles .message.system {
+            align-items: flex-start;
+        }
+
+        .chat-bubbles .bubble {
+            padding: 12px 16px;
+            border-radius: 18px;
+            max-width: 80%;
+            word-wrap: break-word;
+            line-height: 1.5;
+        }
+
+        .chat-bubbles .message.user .bubble {
+            background: rgba(255, 230, 0, 0.35);
+            color: #ffffff;
+            border-bottom-right-radius: 4px;
+            border: 1px solid rgba(255, 230, 0, 0.6);
+        }
+
+        .chat-bubbles .message.system .bubble {
+            background: #2d2d2d;
+            color: #e0e0e0;
+            border: 1px solid #3a3a3a;
+            border-bottom-left-radius: 4px;
+        }
+
+        /* ==================== OPCIÓN 2: MENSAJES AMPLIOS (95% ancho) ==================== */
+        .chat-wide .message {
+            margin-bottom: 16px;
+            display: flex;
+            flex-direction: column;
+            animation: slideIn 0.3s ease;
+        }
+
+        .chat-wide .message.user {
+            align-items: flex-end;
+        }
+
+        .chat-wide .message.system {
+            align-items: flex-start;
+        }
+
+        .chat-wide .bubble {
+            padding: 14px 18px;
+            border-radius: 12px;
+            width: 95%;
+            word-wrap: break-word;
+            line-height: 1.6;
+        }
+
+        .chat-wide .message.user .bubble {
+            background: rgba(255, 230, 0, 0.35);
+            color: #ffffff;
+            border-bottom-right-radius: 4px;
+            border: 1px solid rgba(255, 230, 0, 0.6);
+        }
+
+        .chat-wide .message.system .bubble {
+            background: #2d2d2d;
+            color: #e0e0e0;
+            border: 1px solid #3a3a3a;
+            border-bottom-left-radius: 4px;
+        }
+
+        /* ==================== OPCIÓN 3: FULL WIDTH SIN ALINEACIÓN ==================== */
+        .chat-full .message {
+            margin-bottom: 16px;
+            animation: slideIn 0.3s ease;
+        }
+
+        .chat-full .bubble {
+            padding: 14px 18px;
+            border-radius: 12px;
+            width: 100%;
+            word-wrap: break-word;
+            line-height: 1.6;
+        }
+
+        .chat-full .message.user .bubble {
+            background: rgba(255, 230, 0, 0.35);
+            color: #ffffff;
+            border-left: 3px solid #ffe600;
+            border: 1px solid rgba(255, 230, 0, 0.6);
+            border-left: 3px solid #ffe600;
+        }
+
+        .chat-full .message.system .bubble {
+            background: #2d2d2d;
+            color: #e0e0e0;
+            border: 1px solid #3a3a3a;
+            border-left: 3px solid #6b7280;
+        }
+
+        /* Animaciones */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Scrollbar */
+        .chat-area::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-area::-webkit-scrollbar-track {
+            background: #1a1a1a;
+            border-radius: 10px;
+        }
+
+        .chat-area::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 10px;
+        }
+
+        .description {
+            margin-top: 15px;
+            padding: 14px;
+            background: #1a1a1a;
+            border-radius: 8px;
+            font-size: 0.9em;
+            color: #aaa;
+            line-height: 1.6;
+        }
+
+        .description strong {
+            color: #ffe600;
+        }
+
+        .pros-cons {
+            margin-top: 10px;
+        }
+
+        .pros {
+            color: #10b981;
+        }
+
+        .cons {
+            color: #ef4444;
+        }
+
+        @media (max-width: 1200px) {
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>💬 Burbujas vs Mensajes Amplios</h1>
+
+        <div class="comparison-grid">
+            <!-- OPCIÓN 1: BURBUJAS -->
+            <div class="option-container">
+                <h2 class="option-title">Opción 1: Burbujas (80% ancho)</h2>
+                <div class="chat-area chat-bubbles">
+                    <div class="message user">
+                        <div class="bubble">Bom dia! Tudo bem?</div>
+                    </div>
+
+                    <div class="message system">
+                        <div class="bubble">Olá! Tudo bem, obrigado. Sou um assistente especializado em Azure DevOps.
+                            Como posso ajudá-lo hoje?</div>
+                    </div>
+
+                    <div class="message user">
+                        <div class="bubble">Me puedes mostrar mis tareas pendientes del proyecto Delta?</div>
+                    </div>
+
+                    <div class="message system">
+                        <div class="bubble">Claro! Vou buscar suas tarefas pendentes no projeto Delta. Um momento, por
+                            favor...</div>
+                    </div>
+
+                    <div class="message user">
+                        <div class="bubble">Gracias!</div>
+                    </div>
+
+                    <div class="message system">
+                        <div class="bubble">Encontrei 5 tarefas pendentes no projeto Delta:
+
+                            • Tarefa #234 - Revisar documentação de API
+                            • Tarefa #235 - Implementar nova funcionalidade de autenticação
+                            • Tarefa #236 - Corrigir bug crítico no módulo de pagamentos
+                            • Tarefa #237 - Code review do PR #45
+                            • Tarefa #238 - Atualizar dependências do projeto
+
+                            Precisa de mais detalhes sobre alguma dessas tarefas?</div>
+                    </div>
+
+                    <div class="message user">
+                        <div class="bubble">Sí, dame más info sobre la tarea #236 por favor</div>
+                    </div>
+
+                    <div class="message system">
+                        <div class="bubble">Tarefa #236 - "Corrigir bug crítico no módulo de pagamentos"
+
+                            Estado: Em Progresso
+                            Prioridade: Alta
+                            Atribuído a: Você
+                            Data de vencimento: 15/11/2025
+                            Sprint: Sprint 23
+
+                            Descrição: Corrigir erro na validação de cartão de crédito que está impedindo transações em
+                            alguns casos específicos. O erro ocorre quando o usuário tenta usar cartões com bandeiras
+                            menos comuns.
+
+                            Comentários recentes:
+                            - João Silva: "Já identifiquei a causa raiz, está na validação regex"
+                            - Maria Santos: "Preciso revisar o código antes do merge"
+
+                            Quer ver o histórico completo ou os arquivos relacionados?</div>
+                    </div>
+
+                    <div class="message user">
+                        <div class="bubble">No, está perfecto. Muchas gracias por la información detallada!</div>
+                    </div>
+
+                    <div class="message system">
+                        <div class="bubble">De nada! Se precisar de mais alguma coisa sobre suas tarefas no Azure DevOps
+                            ou informações do projeto Delta, estou aqui para ajudar. Boa sorte com o bug! 😊</div>
+                    </div>
+                </div>
+                <div class="description">
+                    <strong>💬 Estilo Chat Clásico</strong><br>
+                    Mensajes limitados al 80% del ancho, alineados según remitente.
+
+                    <div class="pros-cons">
+                        <div class="pros">
+                            <strong>✓ Ventajas:</strong><br>
+                            • Más fácil de seguir la conversación<br>
+                            • Diferenciación visual clara de quién habla<br>
+                            • Estética familiar (WhatsApp, Telegram)<br>
+                            • Mejor para mensajes cortos<br>
+                            • Sensación de diálogo natural
+                        </div>
+                        <br>
+                        <div class="cons">
+                            <strong>✗ Desventajas:</strong><br>
+                            • Desperdicia espacio en mensajes largos<br>
+                            • Texto puede ser difícil de leer si es muy ancho
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- OPCIÓN 2: MENSAJES AMPLIOS -->
+            <div class="option-container">
+                <h2 class="option-title">Opción 2: Mensajes Amplios (95% ancho)</h2>
+                <div class="chat-area chat-wide">
+                    <div class="message user">
+                        <div class="bubble">Bom dia! Tudo bem?</div>
+                    </div>
+
+                    <div class="message system">
+                        <div class="bubble">Olá! Tudo bem, obrigado. Sou um assistente especializado em Azure DevOps.
+                            Como posso ajudá-lo hoje?</div>
+                    </div>
+
+                    <div class="message user">
+                        <div class="bubble">Me puedes mostrar mis tareas pendientes del proyecto Delta?</div>
+                    </div>
+
+                    <div class="message system">
+                        <div class="bubble">Claro! Vou buscar suas tarefas pendentes no projeto Delta. Um momento, por
+                            favor...</div>
+                    </div>
+
+                    <div class="message user">
+                        <div class="bubble">Gracias!</div>
+                    </div>
+
+                    <div class="message system">
+                        <div class="bubble">Encontrei 5 tarefas pendentes no projeto Delta:
+
+                            • Tarefa #234 - Revisar documentação de API
+                            • Tarefa #235 - Implementar nova funcionalidade de autenticação
+                            • Tarefa #236 - Corrigir bug crítico no módulo de pagamentos
+                            • Tarefa #237 - Code review do PR #45
+                            • Tarefa #238 - Atualizar dependências do projeto
+
+                            Precisa de mais detalhes sobre alguma dessas tarefas?</div>
+                    </div>
+
+                    <div class="message user">
+                        <div class="bubble">Sí, dame más info sobre la tarea #236 por favor</div>
+                    </div>
+
+                    <div class="message system">
+                        <div class="bubble">Tarefa #236 - "Corrigir bug crítico no módulo de pagamentos"
+
+                            Estado: Em Progresso
+                            Prioridade: Alta
+                            Atribuído a: Você
+                            Data de vencimento: 15/11/2025
+                            Sprint: Sprint 23
+
+                            Descrição: Corrigir erro na validação de cartão de crédito que está impedindo transações em
+                            alguns casos específicos. O erro ocorre quando o usuário tenta usar cartões com bandeiras
+                            menos comuns.
+
+                            Comentários recentes:
+                            - João Silva: "Já identifiquei a causa raiz, está na validação regex"
+                            - Maria Santos: "Preciso revisar o código antes do merge"
+
+                            Quer ver o histórico completo ou os arquivos relacionados?</div>
+                    </div>
+
+                    <div class="message user">
+                        <div class="bubble">No, está perfecto. Muchas gracias por la información detallada!</div>
+                    </div>
+
+                    <div class="message system">
+                        <div class="bubble">De nada! Se precisar de mais alguma coisa sobre suas tarefas no Azure DevOps
+                            ou informações do projeto Delta, estou aqui para ajudar. Boa sorte com o bug! 😊</div>
+                    </div>
+                </div>
+                <div class="description">
+                    <strong>📄 Estilo Amplio</strong><br>
+                    Mensajes ocupan 95% del ancho, aún alineados según remitente.
+
+                    <div class="pros-cons">
+                        <div class="pros">
+                            <strong>✓ Ventajas:</strong><br>
+                            • Mejor aprovechamiento del espacio<br>
+                            • Ideal para respuestas largas y estructuradas<br>
+                            • Más legible con listas y texto extenso<br>
+                            • Profesional para dashboards/herramientas
+                        </div>
+                        <br>
+                        <div class="cons">
+                            <strong>✗ Desventajas:</strong><br>
+                            • Menos "chat-like"<br>
+                            • Mensajes cortos se ven raros muy anchos<br>
+                            • Puede perder sensación de conversación
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- OPCIÓN 3: FULL WIDTH -->
+        <div class="option-container" style="max-width: 100%;">
+            <h2 class="option-title">Opción 3: Full Width con Borde de Color</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="chat-area chat-full">
+                    <div class="message user">
+                        <div class="bubble">Bom dia! Tudo bem?</div>
+                    </div>
+
+                    <div class="message system">
+                        <div class="bubble">Olá! Tudo bem, obrigado. Sou um assistente especializado em Azure DevOps.
+                            Como posso ajudá-lo hoje?</div>
+                    </div>
+
+                    <div class="message user">
+                        <div class="bubble">Me puedes mostrar mis tareas pendientes del proyecto Delta?</div>
+                    </div>
+
+                    <div class="message system">
+                        <div class="bubble">Claro! Vou buscar suas tarefas pendentes no projeto Delta. Um momento, por
+                            favor...</div>
+                    </div>
+
+                    <div class="message user">
+                        <div class="bubble">Gracias!</div>
+                    </div>
+
+                    <div class="message system">
+                        <div class="bubble">Encontrei 5 tarefas pendentes no projeto Delta:
+
+                            • Tarefa #234 - Revisar documentação de API
+                            • Tarefa #235 - Implementar nova funcionalidade de autenticação
+                            • Tarefa #236 - Corrigir bug crítico no módulo de pagamentos
+                            • Tarefa #237 - Code review do PR #45
+                            • Tarefa #238 - Atualizar dependências do projeto
+
+                            Precisa de mais detalhes sobre alguma dessas tarefas?</div>
+                    </div>
+
+                    <div class="message user">
+                        <div class="bubble">Sí, dame más info sobre la tarea #236 por favor</div>
+                    </div>
+
+                    <div class="message system">
+                        <div class="bubble">Tarefa #236 - "Corrigir bug crítico no módulo de pagamentos"
+
+                            Estado: Em Progresso
+                            Prioridade: Alta
+                            Atribuído a: Você
+                            Data de vencimento: 15/11/2025
+                            Sprint: Sprint 23
+
+                            Descrição: Corrigir erro na validação de cartão de crédito que está impedindo transações em
+                            alguns casos específicos. O erro ocorre quando o usuário tenta usar cartões com bandeiras
+                            menos comuns.
+
+                            Comentários recentes:
+                            - João Silva: "Já identifiquei a causa raiz, está na validação regex"
+                            - Maria Santos: "Preciso revisar o código antes do merge"
+
+                            Quer ver o histórico completo ou os arquivos relacionados?</div>
+                    </div>
+                </div>
+
+                <div class="description" style="margin-top: 0;">
+                    <strong>📋 Estilo Dashboard/Consola</strong><br>
+                    Mensajes 100% ancho sin alineación, con borde de color para diferenciar.
+
+                    <div class="pros-cons">
+                        <div class="pros">
+                            <strong>✓ Ventajas:</strong><br>
+                            • Máximo aprovechamiento del espacio<br>
+                            • Perfecto para información técnica/datos<br>
+                            • Estilo profesional tipo terminal<br>
+                            • Ideal para respuestas estructuradas<br>
+                            • Más fácil de escanear visualmente
+                        </div>
+                        <br>
+                        <div class="cons">
+                            <strong>✗ Desventajas:</strong><br>
+                            • No se siente como un chat tradicional<br>
+                            • Pierde el concepto de "conversación"<br>
+                            • Menos intuitivo para usuarios
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
