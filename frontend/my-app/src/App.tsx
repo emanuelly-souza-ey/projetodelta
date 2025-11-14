@@ -1,9 +1,14 @@
-import { useState } from 'react'; 
+import { useState, useEffect } from 'react'; 
 import styled from 'styled-components'; 
 import ChatContainer from './components/chat/ChatContainer'; 
 import type { AutocompleteConfig } from './types/autocomplete'; 
 
 function App() {
+
+   useEffect(() => {
+    console.log("API URL:", import.meta.env.VITE_API_URL);
+  }, []);
+
   const autocompleteConfigs: AutocompleteConfig[] = [
     {
       trigger: "@",
@@ -39,7 +44,7 @@ function App() {
       <Title>
         <BoldWhite>Bem-vindo </BoldWhite> 
         <NormalWhite>ao </NormalWhite>
-        <Yellow>Agil.AI</Yellow>
+        <Yellow>Agil.IA</Yellow>
         </Title> 
       <Subtitle>Seu assistente inteligente para insights ágeis e decisões mais rápidas.
         <br />

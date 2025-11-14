@@ -1,8 +1,8 @@
 from fastapi import APIRouter
-
 from .endpoints.chat import router as chat_router
 from .endpoints.validate_connection import router as validate_router
 from .endpoints.examples import router as examples_router
+from backend.services.azure_client import chat_completion
 
 router = APIRouter()
 
@@ -16,3 +16,8 @@ try:
 except ImportError:
     pass
 
+@router.post("/chat/")
+async def chat_endpoint(payload: dict):
+    user_message = payload.get("message", "")
+    result = await chat_completion(user_message)
+    return {"response": result}

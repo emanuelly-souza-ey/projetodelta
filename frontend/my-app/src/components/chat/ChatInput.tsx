@@ -159,8 +159,8 @@ const InputContainer = styled.div`
   border-radius: 14px;
   padding: 10px 14px;
   width: 100%;
-  max-width: 750px;
-  margin: 0 auto;
+  /* max-width: 750px;
+  /* margin: 0 auto;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.25);
 
   &:focus-within {
@@ -218,7 +218,15 @@ const TriggerButton = styled.button`
 const ButtonsContainer = styled.div`
   display: flex;
   gap: 8px;
-  margin-bottom: 8px;
   flex-wrap: nowrap;
   justify-content: flex-start;
+
+  /* Só aplica margin se realmente tiver botões */
+  &:empty {
+    margin-bottom: 0;
+  }
+
+  &:not(:empty) {
+    margin-bottom: 8px;
+  }
 `;

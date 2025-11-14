@@ -130,7 +130,7 @@ uvicorn backend.main:app --reload
 ✅ API disponível em: `http://localhost:8000`  
 📚 Documentação interativa: `http://localhost:8000/docs`
 
-### Frontend (Aplicação)
+### Frontend (Aplicação: React + Vite)
 
 ```bash
 # Na pasta frontend/my-app
@@ -194,7 +194,9 @@ O Agil.IA já possui **15+ prompts implementados**, incluindo:
 
 <div align="center">
 
-**Desenvolvido com ❤️**
+**Créditos ❤️**
+Desenvolvido por Maria Caceres e Emanuelly Souza
+Apoio PMO | Thamires Azeredo e Davi Tavares
 
 *Transformando a gestão ágil através da inteligência artificial*
 

@@ -8,6 +8,7 @@ import EmptyState from "./EmptyState";
 import QuickReplies from "./QuickReplies";
 import TypingIndicator from "./TypingIndicator";
 import styled from "styled-components";
+import { sendMessageToAPI } from "../../services/api";
 
 interface ChatContainerProps {
   autocompleteConfigs: AutocompleteConfig[];
@@ -19,13 +20,24 @@ const ChatContainer = ({ autocompleteConfigs, title }: ChatContainerProps) => {
   const [isTyping, setIsTyping] = useState(false);
   const [showQuickReplies, setShowQuickReplies] = useState(true);
   const [showBackground, setShowBackground] = useState(true);
+  const [conversationId, setConversationId] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   const lastMessage = messages[messages.length - 1];
   const quickReplies = lastMessage?.quickReplies;
 
-  const handleMessage = (msg: string) => {
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isTyping]);
+
+  /* --------------------------- HANDLE MESSAGE --------------------------- */
+
+  const handleMessage = async (msg: string) => {
     setShowBackground(false);
 
     const timestamp = new Date().toLocaleTimeString("en-US", {
@@ -33,14 +45,37 @@ const ChatContainer = ({ autocompleteConfigs, title }: ChatContainerProps) => {
       minute: "2-digit",
     });
 
-    setMessages([...messages, { message: msg, role: "user", timestamp }]);
+    setMessages((prev) => [
+      ...prev,
+      { message: msg, role: "user", timestamp },
+    ]);
 
     setIsTyping(true);
-    setTimeout(() => {
+
+    try {
+      const res = await sendMessageToAPI(msg, conversationId || undefined);
+
+      if (!conversationId) {
+        setConversationId(res.conversation_id);
+      }
+
+      const botMsg: ChatBubbleProp = {
+        message: res.message,
+        role: "system",
+        timestamp: new Date().toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      };
+
+      setMessages((prev) => [...prev, botMsg]);
+    } catch (err) {
+      console.error("Erro ao chamar API:", err);
+
       setMessages((prev) => [
         ...prev,
         {
-          message: `Response to: ${msg}`,
+          message: "❌ Erro ao se comunicar com o servidor.",
           role: "system",
           timestamp: new Date().toLocaleTimeString("en-US", {
             hour: "2-digit",
@@ -48,26 +83,16 @@ const ChatContainer = ({ autocompleteConfigs, title }: ChatContainerProps) => {
           }),
         },
       ]);
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
   const handleClear = () => {
     setMessages([]);
     setShowBackground(true);
+    setConversationId(null);
   };
-
-  useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [messages, isTyping]);
-
-  useEffect(() => {
-    if (lastMessage?.quickReplies) {
-      setShowQuickReplies(true);
-    }
-  }, [lastMessage]);
 
   const handleQuickReply = (option: string) => {
     handleMessage(option);
@@ -76,10 +101,8 @@ const ChatContainer = ({ autocompleteConfigs, title }: ChatContainerProps) => {
 
   return (
     <>
-      {/* fundo com efeito de luz */}
       <LightEffect $visible={showBackground} />
 
-      {/* container do chat */}
       <ChatContainerWrapper>
         <ChatHeader title={title} onClear={handleClear} />
 
@@ -94,6 +117,7 @@ const ChatContainer = ({ autocompleteConfigs, title }: ChatContainerProps) => {
           )}
 
           {isTyping && <TypingIndicator />}
+
           {quickReplies && showQuickReplies && (
             <QuickReplies options={quickReplies} onSelect={handleQuickReply} />
           )}
@@ -115,9 +139,8 @@ const ChatContainer = ({ autocompleteConfigs, title }: ChatContainerProps) => {
 
 export default ChatContainer;
 
-/* ------------------- STYLES ------------------- */
+/* ------------------- STYLED COMPONENTS ------------------- */
 
-/* Fundo da página */
 const LightEffect = styled.div<{ $visible: boolean }>`
   position: fixed;
   inset: 0;
@@ -133,7 +156,6 @@ const LightEffect = styled.div<{ $visible: boolean }>`
   z-index: 0;
 `;
 
-/* Chat sem fundo opaco — transparente */
 const ChatContainerWrapper = styled.div`
   display: flex;
   flex-direction: column;
@@ -143,8 +165,8 @@ const ChatContainerWrapper = styled.div`
   margin: 0 auto;
   position: relative;
   padding: 0 16px;
-  background-color: rgba(13, 15, 18, 0.4); /* leve transparência */
-  backdrop-filter: blur(20px); /* dá um efeito de vidro fosco */
+  background-color: rgba(13, 15, 18, 0.4);
+  backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 16px;
   z-index: 1;
@@ -155,16 +177,6 @@ const MessagesArea = styled.div`
   flex: 1;
   overflow-y: auto;
   padding: 0 8px 24px;
-  scrollbar-width: thin;
-  scrollbar-color: #444 transparent;
-
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
-  &::-webkit-scrollbar-thumb {
-    background-color: #444;
-    border-radius: 10px;
-  }
 `;
 
 const InputArea = styled.div`
@@ -172,7 +184,6 @@ const InputArea = styled.div`
   bottom: 0;
   left: 0;
   right: 0;
-  background-color: none;
   padding: 20px 12px;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
   display: flex;
