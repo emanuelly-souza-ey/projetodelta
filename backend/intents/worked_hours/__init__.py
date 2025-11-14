@@ -38,6 +38,6 @@ INTENT_METADATA = IntentMetadata(
 )
 
 # Auto-register this intent
-register_intent(INTENT_METADATA)
+#register_intent(INTENT_METADATA)
 
 __all__ = ["create_worked_hours_handler", "WorkedHoursQuery", "WorkedHoursResponse", "INTENT_METADATA"]
