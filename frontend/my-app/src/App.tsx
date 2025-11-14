@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react'; 
-import styled from 'styled-components'; 
-import ChatContainer from './components/chat/ChatContainer'; 
-import type { AutocompleteConfig } from './types/autocomplete'; 
+import { useEffect, useState } from 'react';
+import styled from 'styled-components';
+import ChatContainer from './components/chat/ChatContainer';
+import type { AutocompleteConfig } from './types/autocomplete';
 
 function App() {
+  const [hasMessages, setHasMessages] = useState(false);
 
-   useEffect(() => {
+  useEffect(() => {
     console.log("API URL:", import.meta.env.VITE_API_URL);
   }, []);
 
@@ -38,28 +39,34 @@ function App() {
     }
   ];
 
-  return ( 
-  <Container> 
-    <HeaderSection> 
-      <Title>
-        <BoldWhite>Bem-vindo </BoldWhite> 
-        <NormalWhite>ao </NormalWhite>
-        <Yellow>Agil.IA</Yellow>
-        </Title> 
-      <Subtitle>Seu assistente inteligente para insights ágeis e decisões mais rápidas.
-        <br />
-        Conectado ao Azure DevOps, o Agil.AI apoia PMOs no acompanhamento de projetos, análise de resultados e aumento da eficiência nas entregas, tudo em um só lugar!
-      </Subtitle> 
-    </HeaderSection> 
+  return (
+    <Container>
+      <HeaderSection>
+        <Title>
+          <BoldWhite>Bem-vindo </BoldWhite>
+          <NormalWhite>ao </NormalWhite>
+          <Yellow>Agil.IA</Yellow>
+        </Title>
+        {!hasMessages && (
+          <Subtitle>Seu assistente inteligente para insights ágeis e decisões mais rápidas.
+            <br />
+            Conectado ao Azure DevOps, o Agil.AI apoia PMOs no acompanhamento de projetos, análise de resultados e aumento da eficiência nas entregas, tudo em um só lugar!
+          </Subtitle>
+        )}
+      </HeaderSection>
 
-    <ChatWrapper> 
-      <ChatContainer autocompleteConfigs={autocompleteConfigs} title="" /> 
-    </ChatWrapper> 
-  </Container> 
-);
-} 
+      <ChatWrapper $hasMessages={hasMessages}>
+        <ChatContainer
+          autocompleteConfigs={autocompleteConfigs}
+          title=""
+          onFirstMessage={() => setHasMessages(true)}
+        />
+      </ChatWrapper>
+    </Container>
+  );
+}
 
-export default App; 
+export default App;
 
 const Container = styled.div` 
   background: #0d0f12;
@@ -74,19 +81,19 @@ const Container = styled.div`
   box-sizing: border-box;
   padding-top: 100px;
   position: relative;
-`; 
+`;
 
 const HeaderSection = styled.div` 
   text-align: center; 
   margin: -20px auto 24px;
   max-width: 700px; 
-`; 
+`;
 
 const Title = styled.h1` 
   font-size: 3rem; 
   font-weight: 700; 
   margin-bottom: 10px; 
-`; 
+`;
 
 const BoldWhite = styled.span`
   color: white;
@@ -107,9 +114,9 @@ const Subtitle = styled.p`
   font-size: 1.1rem; 
   color: #cfcfcf; 
   line-height: 1.5; 
-`; 
+`;
 
-const ChatWrapper = styled.div` 
+const ChatWrapper = styled.div<{ $hasMessages: boolean }>` 
   width: 100%;
   max-width: 800px;
   flex: 1;
@@ -119,19 +126,5 @@ const ChatWrapper = styled.div`
   display: flex;
   flex-direction: column;
   overflow: hidden;
-
-  & > * {
-    flex: 1;
-    overflow: y;
-    scrollbar-width: thin;
-    scrollbar-color: #444 transparent;
-
-    &::-webkit-scrollbar {
-      width: 6px;
-    }
-    
-    &::-webkit-scrollbar-thumb {
-      background-color: #444;
-      border-radius: 10px;
-    }
+  margin-top: ${({ $hasMessages }) => $hasMessages ? '20px' : '0'};
 `;

@@ -1,4 +1,6 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import styled from "styled-components";
+import { sendMessageToAPI } from "../../services/api";
 import { AutocompleteConfig } from "../../types/autocomplete";
 import type { ChatBubbleProp } from "./ChatBubble";
 import ChatHeader from "./ChatHeader";
@@ -7,22 +9,22 @@ import ChatMessageList from "./ChatMessageList";
 import EmptyState from "./EmptyState";
 import QuickReplies from "./QuickReplies";
 import TypingIndicator from "./TypingIndicator";
-import styled from "styled-components";
-import { sendMessageToAPI } from "../../services/api";
 
 interface ChatContainerProps {
   autocompleteConfigs: AutocompleteConfig[];
   title: string;
+  onFirstMessage?: () => void;
 }
 
-const ChatContainer = ({ autocompleteConfigs, title }: ChatContainerProps) => {
+const ChatContainer = ({ autocompleteConfigs, title, onFirstMessage }: ChatContainerProps) => {
   const [messages, setMessages] = useState<ChatBubbleProp[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [showQuickReplies, setShowQuickReplies] = useState(true);
-  const [showBackground, setShowBackground] = useState(true);
   const [conversationId, setConversationId] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const messagesAreaRef = useRef<HTMLDivElement | null>(null);
+  const prevMessagesLengthRef = useRef(messages.length);
 
   const lastMessage = messages[messages.length - 1];
   const quickReplies = lastMessage?.quickReplies;
@@ -32,23 +34,41 @@ const ChatContainer = ({ autocompleteConfigs, title }: ChatContainerProps) => {
   };
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, isTyping]);
+    // Solo hacer scroll si se agregó un nuevo mensaje
+    if (messages.length > prevMessagesLengthRef.current) {
+      scrollToBottom();
+      prevMessagesLengthRef.current = messages.length;
+    }
+  }, [messages]);
+
+  useEffect(() => {
+    // Solo hacer scroll cuando isTyping cambia a true
+    if (isTyping) {
+      scrollToBottom();
+    }
+  }, [isTyping]);
 
   /* --------------------------- HANDLE MESSAGE --------------------------- */
 
   const handleMessage = async (msg: string) => {
-    setShowBackground(false);
-
     const timestamp = new Date().toLocaleTimeString("en-US", {
       hour: "2-digit",
       minute: "2-digit",
     });
 
-    setMessages((prev) => [
-      ...prev,
-      { message: msg, role: "user", timestamp },
-    ]);
+    setMessages((prev) => {
+      const newMessages = [
+        ...prev,
+        { message: msg, role: "user", timestamp },
+      ];
+
+      // Si es el primer mensaje, notificar al padre
+      if (prev.length === 0 && onFirstMessage) {
+        onFirstMessage();
+      }
+
+      return newMessages;
+    });
 
     setIsTyping(true);
 
@@ -90,7 +110,6 @@ const ChatContainer = ({ autocompleteConfigs, title }: ChatContainerProps) => {
 
   const handleClear = () => {
     setMessages([]);
-    setShowBackground(true);
     setConversationId(null);
   };
 
@@ -101,7 +120,7 @@ const ChatContainer = ({ autocompleteConfigs, title }: ChatContainerProps) => {
 
   return (
     <>
-      <LightEffect $visible={showBackground} />
+      <LightEffect />
 
       <ChatContainerWrapper>
         <ChatHeader title={title} onClear={handleClear} />
@@ -122,17 +141,21 @@ const ChatContainer = ({ autocompleteConfigs, title }: ChatContainerProps) => {
             <QuickReplies options={quickReplies} onSelect={handleQuickReply} />
           )}
         </MessagesArea>
-
-        <InputArea>
-          <ChatInput
-            onSend={(msg) => {
-              handleMessage(msg);
-              setShowQuickReplies(false);
-            }}
-            autocompleteConfigs={autocompleteConfigs}
-          />
-        </InputArea>
       </ChatContainerWrapper>
+
+      <InputArea>
+        <ChatInput
+          onSend={(msg) => {
+            handleMessage(msg);
+            setShowQuickReplies(false);
+          }}
+          autocompleteConfigs={autocompleteConfigs}
+        />
+        <CreditsText>
+          Desenvolvido com ❤️ por Maria Caceres e Emanuelly Souza<br />
+          Apoio PMO | Thamires Azeredo e Davi Tavares
+        </CreditsText>
+      </InputArea>
     </>
   );
 };
@@ -141,7 +164,7 @@ export default ChatContainer;
 
 /* ------------------- STYLED COMPONENTS ------------------- */
 
-const LightEffect = styled.div<{ $visible: boolean }>`
+const LightEffect = styled.div`
   position: fixed;
   inset: 0;
   background: radial-gradient(
@@ -151,15 +174,13 @@ const LightEffect = styled.div<{ $visible: boolean }>`
   );
   filter: blur(120px);
   pointer-events: none;
-  opacity: ${({ $visible }) => ($visible ? 1 : 0)};
-  transition: opacity 0.6s ease-in-out;
   z-index: 0;
 `;
 
 const ChatContainerWrapper = styled.div`
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  flex: 1;
   max-width: 750px;
   width: 100%;
   margin: 0 auto;
@@ -171,23 +192,53 @@ const ChatContainerWrapper = styled.div`
   border-radius: 16px;
   z-index: 1;
   box-shadow: 0 0 30px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
 `;
 
 const MessagesArea = styled.div`
   flex: 1;
   overflow-y: auto;
   padding: 0 8px 24px;
+  
+  /* Scrollbar personalizado */
+  scrollbar-width: thin;
+  scrollbar-color: #444 #1a1a1a;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #1a1a1a;
+    border-radius: 10px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 10px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: #555;
+  }
 `;
 
 const InputArea = styled.div`
-  position: sticky;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 20px 12px;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  width: 100%;
+  max-width: 750px;
+  margin: 16px auto 0;
+  padding: 0 16px 20px;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   z-index: 2;
+`;
+
+const CreditsText = styled.div`
+  font-size: 0.8em;
+  color: #666;
+  margin-top: 12px;
+  text-align: center;
+  line-height: 1.5;
 `;

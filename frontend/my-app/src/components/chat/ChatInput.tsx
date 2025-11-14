@@ -1,6 +1,6 @@
 import { useState } from "react";
+import { IoAt, IoSend } from "react-icons/io5";
 import styled from "styled-components";
-import { IoSend } from "react-icons/io5";
 import type { AutocompleteConfig } from "../../types/autocomplete";
 import AutocompleteList from "../autocomplete/AutocompleteList";
 
@@ -70,12 +70,21 @@ const ChatInput = ({
             config.buttonLabel && (
               <TriggerButton key={idx} onClick={() => openList(config)}>
                 {config.buttonLabel}
-            </TriggerButton>
-          )
-      )}
+              </TriggerButton>
+            )
+        )}
       </ButtonsContainer>
 
       <InputContainer>
+        {activeConfig && (
+          <AutocompleteList
+            query={query}
+            items={activeConfig.items}
+            onSelect={handleSelect}
+            selectedIndex={selectedIndex}
+          />
+        )}
+
         <StyledInput
           type="text"
           value={message}
@@ -120,6 +129,18 @@ const ChatInput = ({
           }}
         />
 
+        <ActionButton
+          onClick={() => {
+            const mentionConfig = autocompleteConfigs.find(c => c.trigger === "@");
+            if (mentionConfig) {
+              openList(mentionConfig);
+            }
+          }}
+          title="Mencionar pessoa"
+        >
+          <IoAt />
+        </ActionButton>
+
         <SendButton
           onClick={handleSend}
           disabled={!message.trim()}
@@ -128,15 +149,6 @@ const ChatInput = ({
           <IoSend />
         </SendButton>
       </InputContainer>
-
-      {activeConfig && (
-        <AutocompleteList
-          query={query}
-          items={activeConfig.items}
-          onSelect={handleSelect}
-          selectedIndex={selectedIndex}
-        />
-      )}
     </InputWrapper>
   );
 };
@@ -152,10 +164,16 @@ const InputWrapper = styled.div`
 `;
 
 const InputContainer = styled.div`
+  position: relative;
   display: flex;
   align-items: center;
   background-color: #1a1b1e;
-  border: 1px solid #3a3a3a;
+  border: 2px solid transparent;
+  background-image: 
+    linear-gradient(#1a1b1e, #1a1b1e),
+    linear-gradient(90deg, #656579 0%, #c6b200 50%, #656579 100%);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
   border-radius: 14px;
   padding: 10px 14px;
   width: 100%;
@@ -164,7 +182,9 @@ const InputContainer = styled.div`
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.25);
 
   &:focus-within {
-    border-color: #4a9eff;
+    background-image: 
+      linear-gradient(#1a1b1e, #1a1b1e),
+      linear-gradient(90deg, #656579 0%, #d4c000 50%, #656579 100%);
   }
 `;
 
@@ -182,10 +202,28 @@ const StyledInput = styled.input`
   }
 `;
 
+const ActionButton = styled.button`
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, color 0.2s ease;
+  margin-right: 8px;
+
+  &:hover {
+    transform: scale(1.1);
+    color: #aaa;
+  }
+`;
+
 const SendButton = styled.button<{ $active: boolean }>`
   background: none;
   border: none;
-  color: ${({ $active }) => ($active ? "#4a9eff" : "#555")};
+  color: ${({ $active }) => ($active ? "#ffe600" : "#555")};
   font-size: 22px;
   cursor: ${({ $active }) => ($active ? "pointer" : "default")};
   display: flex;
@@ -195,7 +233,7 @@ const SendButton = styled.button<{ $active: boolean }>`
 
   &:hover {
     transform: ${({ $active }) => ($active ? "scale(1.1)" : "none")};
-    color: ${({ $active }) => ($active ? "#70b5ff" : "#555")};
+    color: ${({ $active }) => ($active ? "#ffed33" : "#555")};
   }
 `;
 
