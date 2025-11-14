@@ -42,6 +42,11 @@ class GetTasksQuery(BaseQueryParams):
         None,
         description="End date filter in YYYY-MM-DD format"
     )
+    
+    tags: Optional[str] = Field(
+        None,
+        description="Tags filter, comma-separated tags to search for"
+    )
 
 
 class TaskItem(BaseModel):

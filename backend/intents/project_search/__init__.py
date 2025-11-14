@@ -32,7 +32,7 @@ def create_project_search_handler(session_id: str = None):
 INTENT_METADATA = IntentMetadata(
     category="project_search",
     name="Busca e Exploração de Projetos",
-    description="Explorar, buscar e listar projetos disponíveis usando palavras-chave. Exemplos: 'mostrar projetos de IA', 'quais projetos temos?', 'listar projetos ativos', 'buscar projetos com Python'",
+    description="Explorar, buscar, listar e contar projetos disponíveis usando palavras-chave. Exemplos: 'mostrar projetos de IA', 'quais projetos temos?', 'listar projetos ativos', 'buscar projetos com Python', 'quantos projetos estão no backlog?'",
     handler_class=create_project_search_handler,
     agent_name="search_agent"
 )

@@ -12,6 +12,17 @@ from .models import ProjectSearchQuery, ProjectSearchResponse
 class ProjectSearchService(BaseService[ProjectSearchQuery, ProjectSearchResponse]):
     """Service to search and discover Epic projects from Azure DevOps."""
     
+    def _build_wiql_query(self, params: ProjectSearchQuery) -> str:
+        return f"""
+        SELECT [System.Id], [System.Title], [System.State], [System.Description]
+        FROM workitems
+        WHERE [System.WorkItemType] = 'Epic'
+        AND [System.TeamProject] = 'HUB GenAI'
+        AND [System.AreaPath] = 'HUB GenAI\\Projeto DELTA'
+        {f"AND [System.State] = '{params.state}'" if params.state is not None else ""}
+        ORDER BY [System.ChangedDate] DESC
+        """
+
     async def query_data(self, params: ProjectSearchQuery) -> ProjectSearchResponse:
         """
         Search for projects using keywords and filters.
@@ -23,7 +34,7 @@ class ProjectSearchService(BaseService[ProjectSearchQuery, ProjectSearchResponse
             ProjectSearchResponse with matching projects
         """
         # Fetch all projects
-        all_projects = await self._fetch_all_projects()
+        all_projects = await self._fetch_all_projects(params)
         
         # Apply filters if specified
         filtered_projects = self._apply_filters(all_projects, params.filters)
@@ -51,19 +62,12 @@ class ProjectSearchService(BaseService[ProjectSearchQuery, ProjectSearchResponse
             message=message
         )
     
-    async def _fetch_all_projects(self) -> List[EpicProject]:
+    async def _fetch_all_projects(self, params: ProjectSearchQuery) -> List[EpicProject]:
         """Fetch all Epic work items (projects) from Azure DevOps."""
         project_id = self.azure_config.devops_project_id
         
         # WIQL query to get all Epic work items
-        wiql_query = """
-        SELECT [System.Id], [System.Title], [System.State], [System.Description]
-        FROM workitems
-        WHERE [System.WorkItemType] = 'Epic'
-        AND [System.TeamProject] = 'HUB GenAI'
-        AND [System.AreaPath] = 'HUB GenAI\\Projeto DELTA'
-        ORDER BY [System.ChangedDate] DESC
-        """
+        wiql_query = self._build_wiql_query(params)
         
         url = self.azure_config.get_devops_url(project_id) + "/_apis/wit/wiql?api-version=7.1"
         

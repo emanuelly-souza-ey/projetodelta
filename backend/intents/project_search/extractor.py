@@ -23,20 +23,26 @@ class ProjectSearchExtractor(BaseExtractor[ProjectSearchQuery]):
         2. search_terms: Extract ONLY meaningful business/technical keywords
            - Include: technology names, domains, business terms, project identifiers
            - EXCLUDE: generic words like "projects", "projetos", "show", "list", "find"
+           - EXCLUDE classifying word like epic or epics, is a synonimous for project 
            - Extract only terms that help filter/identify specific projects
            - Return empty list [] if no specific search terms are found
-        3. filters: Extract any state/status filters if mentioned
-           - Example: {{"state": "active"}} or {{"state": "closed"}}
-           - Only include if explicitly mentioned
+        3. state: OPTIONAL - Project state mapping (extract ONLY if explicitly mentioned):
+           - "Active": projetos ativos, em andamento, ativos, em execução
+           - "Closed": projetos concluídos, finalizados, fechados, terminados
+           - "New": backlog, novos, planejados, em planejamento
+           - If NO state is mentioned, return null/None
+        4. filters: Extract any additional filters (tags, etc.) if mentioned
 
         Examples:
-        - "Show me AI projects" → search_terms: ["AI"]
-        - "What projects use Python and ML?" → search_terms: ["Python", "ML"]
-        - "List active projects" → search_terms: [], filters: {{"state": "active"}}
-        - "Find closed Delta projects" → search_terms: ["Delta"], filters: {{"state": "closed"}}
-        - "Mostre os projetos" → search_terms: []
-        - "Listar projetos ativos" → search_terms: [], filters: {{"state": "active"}}
-        - "Projetos com IA" → search_terms: ["IA"]
+        - "Show me AI projects" → search_terms: ["AI"], state: null
+        - "What projects use Python and ML?" → search_terms: ["Python", "ML"], state: null
+        - "List active projects" → search_terms: [], state: "Active"
+        - "Find closed Delta projects" → search_terms: ["Delta"], state: "Closed"
+        - "Mostre os projetos" → search_terms: [], state: null
+        - "Listar projetos ativos" → search_terms: [], state: "Active"
+        - "Projetos concluídos" → search_terms: [], state: "Closed"
+        - "Projetos no backlog" → search_terms: [], state: "New"
+        - "Projetos com IA" → search_terms: ["IA"], state: null
 
         User query: {query}
         """

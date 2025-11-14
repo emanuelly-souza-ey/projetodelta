@@ -123,6 +123,7 @@ class GetTasksService(BaseService[GetTasksQuery, GetTasksResponse]):
         # Build optional filters
         person_filter = f"AND [System.AssignedTo] CONTAINS '{params.person_name}'" if params.person_name else ""
         state_filter = f"AND [System.State] = '{params.task_state}'" if params.task_state else ""
+        tags_filter = f"AND [System.Tags] CONTAINS '{params.tags}'" if params.tags else ""
         
         query = f"""SELECT
     [System.Id],
@@ -140,6 +141,7 @@ WHERE
     AND [System.AreaPath] = 'HUB GenAI\\\\Projeto DELTA'
     {person_filter}
     {state_filter}
+    {tags_filter}
 ORDER BY [Microsoft.VSTS.Common.StackRank] ASC, [System.Id] ASC"""
         
         return query
@@ -165,6 +167,10 @@ ORDER BY [Microsoft.VSTS.Common.StackRank] ASC, [System.Id] ASC"""
         if params.task_state:
             state_filter = f"AND [Target].[System.State] = '{params.task_state}'"
         
+        tags_filter = ""
+        if params.tags:
+            tags_filter = f"AND [Target].[System.Tags] CONTAINS '{params.tags}'"
+        
         query = f"""SELECT
     [System.Id],
     [System.WorkItemType],
@@ -182,6 +188,7 @@ WHERE
     AND [Target].[System.AreaPath] = 'HUB GenAI\\\\Projeto DELTA'
     {person_filter}
     {state_filter}
+    {tags_filter}
 ORDER BY [System.Id] ASC
 MODE (Recursive)"""
         
@@ -201,6 +208,7 @@ MODE (Recursive)"""
             "person": params.person_name,
             "state": params.task_state,
             "type": params.task_type,
+            "tags": params.tags,
             "date_range": None  # Dates not implemented yet
         }
     
@@ -317,6 +325,8 @@ MODE (Recursive)"""
             message += f" Filtrado por pessoa: {params.person_name}."
         if params.task_state:
             message += f" Estado: {params.task_state}."
+        if params.tags:
+            message += f" Tags: {params.tags}."
         
         # Group tasks by person (person_name: [task_titles])
         tasks_by_person = {}

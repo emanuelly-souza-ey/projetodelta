@@ -42,6 +42,8 @@ try:
     from .worked_hours import examples as _  # noqa
     from .project_selection import examples as _  # noqa
     from .project_search import examples as _  # noqa
+    from .project_team import examples as _  # noqa
+    from .get_tasks import examples as _  # noqa
 except ImportError:
     # No problem if examples.py doesn't exist for some intents
     pass

@@ -3,7 +3,7 @@ Data models for project search intent.
 """
 
 from pydantic import Field
-from typing import Optional, List, Dict, ClassVar
+from typing import Optional, List, Dict, ClassVar, Literal
 
 from backend.intents.base_intent.models import BaseQueryParams, BaseResponse
 from backend.models.project_models import EpicProject
@@ -24,9 +24,14 @@ class ProjectSearchQuery(BaseQueryParams):
         description="Keywords extracted from the query for searching"
     )
     
+    state: Optional[Literal["Active", "Closed", "New"]] = Field(
+        None,
+        description="Project state filter. Optional. Must be one of: 'Active' (projetos ativos), 'Closed' (concluídos), 'New' (backlog). None if not specified."
+    )
+    
     filters: Optional[Dict[str, str]] = Field(
         None,
-        description="Optional filters like state (active/closed), tags, etc."
+        description="Optional filters like tags, etc."
     )
 
 

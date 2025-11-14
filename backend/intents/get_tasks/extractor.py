@@ -24,12 +24,15 @@ class GetTasksExtractor(BaseExtractor[GetTasksQuery]):
         3. task_state: Extract state filter (Active, Completed, In Progress, New, etc.)
         4. task_type: Extract work item type (Task, Bug, User Story, Feature, Epic, etc.)
         5. start_date/end_date: Extract date ranges if mentioned (format: YYYY-MM-DD)
+        6. tags: Extract tags if mentioned (comma-separated, e.g., "urgent,backend")
 
         Examples:
         - "minhas tarefas ativas" → person_name: null, task_state: "Active"
         - "tasks do João em progresso" → person_name: "João", task_state: "In Progress"
         - "bugs atribuídos para Maria" → person_name: "Maria", task_type: "Bug"
         - "user stories completadas esta semana" → task_type: "User Story", task_state: "Completed"
+        - "tarefas com tag urgent" → tags: "urgent"
+        - "tasks tagged com backend e frontend" → tags: "backend,frontend"
 
         User query: {query}
         """

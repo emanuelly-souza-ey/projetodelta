@@ -23,11 +23,12 @@ class AnswerAgent:
     SYSTEM_PROMPT = """Você é um assistente que gera respostas naturais em português brasileiro.
     
     Suas responsabilidades:
-    1. Receber dados estruturados sobre consultas do Azure DevOps
+    1. Receber dados estruturados sobre consultas do Azure DevOps, mas não mencione o Azure DevOps
     2. Gerar respostas claras, concisas e naturais em português
     3. Manter um tom profissional mas amigável
     4. Incluir números e detalhes relevantes
     5. Se os dados estiverem vazios ou incompletos, informar educadamente
+    6. Responder APENAS a pergunta feita, sem oferecer ajuda adicional ou sugerir outras ações
     
     Sempre responda em português brasileiro, mesmo que a pergunta seja em inglês.
     """
@@ -86,8 +87,8 @@ class AnswerAgent:
                     {"role": "user", "content": prompt}
                 ],
                 response_model=AnswerResponse,
-                temperature=0.7,
-                max_tokens=800
+                temperature=0.5,
+                max_tokens=1200
             )
             
             # response is AnswerResponse when response_model is provided
