@@ -23,13 +23,17 @@ class ProjectSelectionService(BaseService[ProjectSelectionQuery, ProjectSelectio
         Returns:
             ProjectSelectionResponse with selected project or alternatives
         """
+        # Defensive: convert dict to model if needed
+        if isinstance(params, dict):
+            params = ProjectSelectionQuery(**params)
+        
         if not params.project_name:
             return ProjectSelectionResponse(
                 selected=False,
                 selected_project=None,
                 ambiguous_projects=None,
                 suggested_projects=None,
-                message="Please specify a project name to select."
+                message="Você está tentando selecionar um projeto, mas não consegui identificar qual projeto você quer selecionar. Por favor, especifique o nome ou número do projeto que deseja trabalhar."
             )
         
         # Fetch all projects

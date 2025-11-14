@@ -13,4 +13,4 @@ EXAMPLES = [
 ]
 
 # Auto-register examples
-register_examples("worked_hours", EXAMPLES)
+#register_examples("worked_hours", EXAMPLES)

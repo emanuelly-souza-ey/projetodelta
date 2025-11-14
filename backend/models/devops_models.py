@@ -99,6 +99,15 @@ class WorkItem(BaseModel):
 
     childs: Optional[List[Any]] = Field(default_factory=list)
     parentId: Optional[int] = None
+    
+    # New fields
+    value_area: Optional[str] = None
+    tags: Optional[str] = None
+    estimated_hours: Optional[float] = None
+    full_hours: Optional[float] = None
+    area_name: Optional[str] = None
+    client_face: Optional[str] = None
+    product_owner: Optional[str] = None
 
     @classmethod
     def create_with_defaults(cls, id: int, organization: Optional[str] = None, project: Optional[str] = None):
@@ -171,7 +180,7 @@ class WorkItem(BaseModel):
             self.parseFields(fields)
 
     def parseFields(self, fields):
-        print("Los fields que recibimos para parsear", fields)
+        #print("parsing fields", fields)
         self.completedHours = fields.get("Microsoft.VSTS.Scheduling.CompletedWork", None)
         self.title = fields.get("System.Title", None)
         self.state = fields.get("System.State", None)
@@ -185,6 +194,15 @@ class WorkItem(BaseModel):
                 self.target_date = None
         else:
             self.target_date = None
+        
+        # New fields mapping
+        self.value_area = fields.get("Microsoft.VSTS.Common.ValueArea", None)
+        self.tags = fields.get("System.Tags", None)
+        self.estimated_hours = fields.get("Custom.EstimatedHours", None)
+        self.full_hours = fields.get("Custom.FullHours", None)
+        self.area_name = fields.get("Custom.AreaName", None)
+        self.client_face = fields.get("Custom.ClientFace", None)
+        self.product_owner = fields.get("Custom.ProductOwner", None)
 
     def getDetails(self, headers):
         #Not using in this field

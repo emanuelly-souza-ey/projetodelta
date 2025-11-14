@@ -21,6 +21,10 @@ class WorkedHoursService(BaseService[WorkedHoursQuery, WorkedHoursResponse]):
         Returns:
             WorkedHoursResponse with hours data
         """
+        # Defensive: convert dict to model if needed
+        if isinstance(params, dict):
+            params = WorkedHoursQuery(**params)
+        
         # Build WIQL query
         wiql_query = self._build_wiql_query(params)
         

@@ -60,7 +60,7 @@ class GetTasksExtractor(BaseExtractor[GetTasksQuery]):
         if context and context.get("last_params"):
             context_str = f"Previous query parameters: {context['last_params']}"
             if self.logger:
-                self.logger.info(f"Using conversation context: {context.get('last_query', 'N/A')}")
+                self.logger.info(f"Using conversation context: {context.get('last_query', 'N/A')}"[:150])
         
         # Create extraction prompt
         prompt = self.EXTRACTION_PROMPT.format(

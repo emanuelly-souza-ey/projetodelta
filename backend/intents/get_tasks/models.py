@@ -60,6 +60,13 @@ class TaskItem(BaseModel):
     created_date: Optional[str] = Field(None, description="Creation date")
     changed_date: Optional[str] = Field(None, description="Last modification date")
     description: Optional[str] = Field(None, description="Task description")
+    value_area: Optional[str] = Field(None, description="Value area (Business/Architectural)")
+    tags: Optional[str] = Field(None, description="Task tags")
+    estimated_hours: Optional[float] = Field(None, description="Estimated hours")
+    full_hours: Optional[float] = Field(None, description="Full hours worked")
+    area_name: Optional[str] = Field(None, description="Custom area name")
+    client_face: Optional[str] = Field(None, description="Client facing person")
+    product_owner: Optional[str] = Field(None, description="Product owner")
 
 
 class EpicHierarchy(BaseModel):
@@ -95,6 +102,11 @@ class GetTasksResponse(BaseResponse):
     task_count_by_person: dict = Field(
         default_factory=dict,
         description="Number of tasks per person (person_name: count)"
+    )
+    
+    task_count_by_state: dict = Field(
+        default_factory=dict,
+        description="Number of tasks per state (state: count)"
     )
     
     filtered_by: dict = Field(

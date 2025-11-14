@@ -34,3 +34,7 @@ class ProjectTeamResponse(BaseResponse):
         0,
         description="Total number of team members"
     )
+    message: Optional[str] = Field(
+        None,
+        description="Optional message related to the project team"
+    )

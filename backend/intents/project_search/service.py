@@ -33,11 +33,15 @@ class ProjectSearchService(BaseService[ProjectSearchQuery, ProjectSearchResponse
         Returns:
             ProjectSearchResponse with matching projects
         """
+        # Defensive: convert dict to model if needed
+        if isinstance(params, dict):
+            params = ProjectSearchQuery(**params)
+        
         # Fetch all projects
         all_projects = await self._fetch_all_projects(params)
         
         # Apply filters if specified
-        filtered_projects = self._apply_filters(all_projects, params.filters)
+        filtered_projects = all_projects#self._apply_filters(all_projects, params.filters)
         
         # Search by terms if provided
         if params.search_terms:

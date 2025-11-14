@@ -23,6 +23,9 @@ class ProjectTeamService(BaseService[ProjectTeamQuery, ProjectTeamResponse]):
         Returns:
             ProjectTeamResponse with team members data
         """
+        # Defensive: convert dict to model if needed
+        if isinstance(params, dict):
+            params = ProjectTeamQuery(**params)
         
         # Check if we have Epic context from session memory
         from backend.agents.memory import get_memory
@@ -75,7 +78,8 @@ class ProjectTeamService(BaseService[ProjectTeamQuery, ProjectTeamResponse]):
             members = list(team_members_dict.values())
             return ProjectTeamResponse(
                 members=members,
-                total_count=len(members)
+                total_count=len(members),
+                message="Os integrantes do projeto são: " + ", ".join([member.name for member in members])
             )
             
         except Exception as e:
@@ -83,6 +87,7 @@ class ProjectTeamService(BaseService[ProjectTeamQuery, ProjectTeamResponse]):
                 self.logger.warning(f"Failed to query team from epic tasks: {e}")
             return ProjectTeamResponse(
                 members=[],
-                total_count=0
+                total_count=0,
+                message="Não foi possível recuperar os integrantes do projeto."
             )
 

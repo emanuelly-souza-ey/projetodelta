@@ -90,7 +90,8 @@ async def chat(request: ChatRequest):
                 query=request.message,
                 intent=intent_category,
                 data=handler_result["data"],
-                context=context
+                context=context,
+                extracted_params=handler_result.get("extracted_params")
             )
         else:
             # 5c. Use direct message from handler (no LLM, saves tokens!)

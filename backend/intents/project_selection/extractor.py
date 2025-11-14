@@ -56,7 +56,7 @@ class ProjectSelectionExtractor(BaseExtractor[ProjectSelectionQuery]):
         if context:
             context_str = f"Previous conversation context: {context}"
             if self.logger:
-                self.logger.info(f"Using conversation context: {context}")
+                self.logger.info(f"Using conversation context: {context}"[:150])
         
         prompt = self.EXTRACTION_PROMPT.format(
             context=context_str,

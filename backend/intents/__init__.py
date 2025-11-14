@@ -32,6 +32,7 @@ from . import delayed_tasks
 from . import project_team
 from . import get_tasks
 from . import project_selection  # Project selection - select specific project
+from . import project_deselection  # Project deselection - clear selected project
 from . import project_search  # Project search - explore and discover projects
 from . import available_intents  # Help and available actions
 from . import other  # DevOps queries not yet implemented

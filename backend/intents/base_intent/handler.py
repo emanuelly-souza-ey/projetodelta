@@ -116,13 +116,32 @@ class BaseIntentHandler:
             project_context = context.get("project_context", {})
             context_project_id = project_context.get("project_id")
             if context_project_id:
-                params.project_id = context_project_id
+                # Handle both Pydantic model and dict
+                if hasattr(params, 'project_id'):
+                    params.project_id = context_project_id
+                elif isinstance(params, dict):
+                    params['project_id'] = context_project_id
+                    
                 if self.logger:
                     self.logger.info(f"Enriched params with project_id from context: {context_project_id}")
             
             # 4. Validate project requirement
-            if getattr(params.__class__, 'REQUIRES_PROJECT', False):
-                if not params.project_id:
+            # Check if params is dict or has the attribute
+            requires_project = False
+            if isinstance(params, dict):
+                requires_project = params.get('REQUIRES_PROJECT', False)
+            else:
+                requires_project = getattr(params.__class__, 'REQUIRES_PROJECT', False)
+            
+            if requires_project:
+                # Check project_id in both dict and object formats
+                has_project = False
+                if isinstance(params, dict):
+                    has_project = bool(params.get('project_id'))
+                else:
+                    has_project = bool(getattr(params, 'project_id', None))
+                    
+                if not has_project:
                     error_msg = "Este intent requer que um projeto esteja selecionado. Por favor, selecione um projeto primeiro."
                     if self.logger:
                         self.logger.warning(f"Project required but not found in context")
@@ -138,7 +157,10 @@ class BaseIntentHandler:
             if self.logger:
                 self.logger.info("Querying service for data...")
             
-            response_data = await self.service.query_data(params)
+            # Add conversation_id to params for services that need it (like deselection)
+            params_dict['conversation_id'] = conversation_id
+            
+            response_data = await self.service.query_data(params_dict)
             
             if self.logger:
                 self.logger.info("Data retrieved successfully from service")
@@ -146,9 +168,12 @@ class BaseIntentHandler:
             # 4. Convert to dictionary (handle both dict and Pydantic models)
             data = _to_dict(response_data)
             
-            # 5. Save to memory (preserving project context, except for project_selection intent)
+            # 5. Save to memory (preserving project context, except for project_selection and project_deselection)
             # For project_selection, let the new project context from service take precedence
-            preserve_context = project_context if self.intent_name != "project_selection" else None
+            # For project_deselection, the service already cleared the context, don't preserve it
+            preserve_context = None
+            if self.intent_name not in ["project_selection", "project_deselection"]:
+                preserve_context = project_context
             
             new_conversation_id = self.memory.save(
                 conversation_id or str(uuid4()),
@@ -167,6 +192,7 @@ class BaseIntentHandler:
             return {
                 "data": data,
                 "conversation_id": new_conversation_id,
+                "extracted_params": params_dict,
                 "success": True
             }
             

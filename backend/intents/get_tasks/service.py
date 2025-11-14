@@ -21,6 +21,10 @@ class GetTasksService(BaseService[GetTasksQuery, GetTasksResponse]):
         Returns:
             GetTasksResponse with tasks data
         """
+        # Defensive: convert dict to model if needed
+        if isinstance(params, dict):
+            params = GetTasksQuery(**params)
+        
         # Build WIQL query
         wiql_query = self._build_wiql_query(params)
         
@@ -65,6 +69,7 @@ class GetTasksService(BaseService[GetTasksQuery, GetTasksResponse]):
                     total_count=0,
                     tasks_by_person={},
                     task_count_by_person={},
+                    task_count_by_state={},
                     filtered_by=self._build_filter_summary(params),
                     message="Nenhuma tarefa encontrada com os critérios especificados.",
                     hierarchy=None,
@@ -120,17 +125,30 @@ class GetTasksService(BaseService[GetTasksQuery, GetTasksResponse]):
         Returns:
             WIQL query string
         """
+        # Handle both dict and GetTasksQuery object
+        person_name = params.get('person_name') if isinstance(params, dict) else params.person_name
+        task_state = params.get('task_state') if isinstance(params, dict) else params.task_state
+        tags = params.get('tags') if isinstance(params, dict) else params.tags
+        
         # Build optional filters
-        person_filter = f"AND [System.AssignedTo] CONTAINS '{params.person_name}'" if params.person_name else ""
-        state_filter = f"AND [System.State] = '{params.task_state}'" if params.task_state else ""
-        tags_filter = f"AND [System.Tags] CONTAINS '{params.tags}'" if params.tags else ""
+        person_filter = f"AND [System.AssignedTo] CONTAINS '{person_name}'" if person_name else ""
+        state_filter = f"AND [System.State] = '{task_state}'" if task_state else ""
+        tags_filter = f"AND [System.Tags] CONTAINS '{tags}'" if tags else ""
         
         query = f"""SELECT
     [System.Id],
     [System.WorkItemType],
     [System.Title],
     [System.State],
+    [Microsoft.VSTS.Common.ValueArea],
+    [System.Tags],
+    [Custom.EstimatedHours],
+    [Custom.FullHours],
     [System.AssignedTo],
+    [Custom.AreaName],
+    [Custom.ClientFace],
+    [Custom.ProductOwner],
+    [System.Description],
     [Microsoft.VSTS.Scheduling.RemainingWork],
     [System.IterationPath],
     [System.AreaPath],
@@ -158,25 +176,38 @@ ORDER BY [Microsoft.VSTS.Common.StackRank] ASC, [System.Id] ASC"""
         Returns:
             Hierarchical WIQL query string
         """
+        # Handle both dict and GetTasksQuery object
+        person_name = params.get('person_name') if isinstance(params, dict) else params.person_name
+        task_state = params.get('task_state') if isinstance(params, dict) else params.task_state
+        tags = params.get('tags') if isinstance(params, dict) else params.tags
+        
         # Build optional filters
         person_filter = ""
-        if params.person_name:
-            person_filter = f"AND [Target].[System.AssignedTo] CONTAINS '{params.person_name}'"
+        if person_name:
+            person_filter = f"AND [Target].[System.AssignedTo] CONTAINS '{person_name}'"
         
         state_filter = ""
-        if params.task_state:
-            state_filter = f"AND [Target].[System.State] = '{params.task_state}'"
+        if task_state:
+            state_filter = f"AND [Target].[System.State] = '{task_state}'"
         
         tags_filter = ""
-        if params.tags:
-            tags_filter = f"AND [Target].[System.Tags] CONTAINS '{params.tags}'"
+        if tags:
+            tags_filter = f"AND [Target].[System.Tags] CONTAINS '{tags}'"
         
         query = f"""SELECT
     [System.Id],
     [System.WorkItemType],
     [System.Title],
     [System.State],
+    [Microsoft.VSTS.Common.ValueArea],
+    [System.Tags],
+    [Custom.EstimatedHours],
+    [Custom.FullHours],
     [System.AssignedTo],
+    [Custom.AreaName],
+    [Custom.ClientFace],
+    [Custom.ProductOwner],
+    [System.Description],
     [Microsoft.VSTS.Scheduling.RemainingWork],
     [System.AreaPath],
     [System.IterationPath]
@@ -204,11 +235,17 @@ MODE (Recursive)"""
         Returns:
             Dictionary with filter summary
         """
+        # Handle both dict and GetTasksQuery object
+        person_name = params.get('person_name') if isinstance(params, dict) else params.person_name
+        task_state = params.get('task_state') if isinstance(params, dict) else params.task_state
+        task_type = params.get('task_type') if isinstance(params, dict) else params.task_type
+        tags = params.get('tags') if isinstance(params, dict) else params.tags
+        
         return {
-            "person": params.person_name,
-            "state": params.task_state,
-            "type": params.task_type,
-            "tags": params.tags,
+            "person": person_name,
+            "state": task_state,
+            "type": task_type,
+            "tags": tags,
             "date_range": None  # Dates not implemented yet
         }
     
@@ -301,7 +338,14 @@ MODE (Recursive)"""
                     work_item_type=work_item_type,
                     created_date=fields.get("System.CreatedDate", "")[:10] if fields.get("System.CreatedDate") else "",
                     changed_date=fields.get("System.ChangedDate", "")[:10] if fields.get("System.ChangedDate") else "",
-                    description=fields.get("System.Description", "")
+                    description=fields.get("System.Description", ""),
+                    value_area=fields.get("Microsoft.VSTS.Common.ValueArea"),
+                    tags=fields.get("System.Tags"),
+                    estimated_hours=fields.get("Custom.EstimatedHours"),
+                    full_hours=fields.get("Custom.FullHours"),
+                    area_name=fields.get("Custom.AreaName"),
+                    client_face=fields.get("Custom.ClientFace"),
+                    product_owner=fields.get("Custom.ProductOwner")
                 )
                 tasks.append(task)
         
@@ -320,17 +364,12 @@ MODE (Recursive)"""
             epic_name = project_context.get("project_name", "projeto")
             message += f" do {epic_name}."
         
-        # Add filter info to message if filters were applied
-        if params.person_name:
-            message += f" Filtrado por pessoa: {params.person_name}."
-        if params.task_state:
-            message += f" Estado: {params.task_state}."
-        if params.tags:
-            message += f" Tags: {params.tags}."
+        
         
         # Group tasks by person (person_name: [task_titles])
         tasks_by_person = {}
         task_count_by_person = {}
+        task_count_by_state = {}
         
         for task in tasks:
             person = task.assigned_to or "Não atribuído"
@@ -339,7 +378,44 @@ MODE (Recursive)"""
                 task_count_by_person[person] = 0
             tasks_by_person[person].append(task.title)
             task_count_by_person[person] += 1
+            
+            # Count tasks by state
+            state = task.state or "Sin estado"
+            if state not in task_count_by_state:
+                task_count_by_state[state] = 0
+            task_count_by_state[state] += 1
         
+        #complementing the mesage
+        # Add how many tasks has it user
+        # Add how many tasks per state
+        # If less than 20 tasks add tem to the message
+        # Add filter info to message if filters were applied
+        person_name = params.get('person_name') if isinstance(params, dict) else params.person_name
+        task_state = params.get('task_state') if isinstance(params, dict) else params.task_state
+        tags = params.get('tags') if isinstance(params, dict) else params.tags
+        
+        if person_name:
+            message += f" Filtrado por pessoa: {person_name}."
+        else:
+            # Add task count per person to message
+            for person, count in task_count_by_person.items():
+                message += f" {person} tem {count} tarefa(s)."
+                
+        if task_state:
+            message += f" Estado: {task_state}."
+        else:
+            # Add task count per state to message
+            for state, count in task_count_by_state.items():
+                message += f" {count} tarefa(s) estão em estado '{state}'."
+
+        if tags:
+            message += f" Tags: {tags}."
+
+        # If less than 20 tasks add tem to the message
+        if len(tasks) <= 20:
+            task_titles = ", ".join([task.title for task in tasks])
+            message += f" As tarefas são: {task_titles}."
+
         # Build hierarchy if Epic selected
         hierarchy = None
         if scope == "epic" and epic_info:
@@ -355,6 +431,7 @@ MODE (Recursive)"""
             total_count=len(tasks),
             tasks_by_person=tasks_by_person,
             task_count_by_person=task_count_by_person,
+            task_count_by_state=task_count_by_state,
             filtered_by=self._build_filter_summary(params),
             message=message,
             hierarchy=hierarchy,

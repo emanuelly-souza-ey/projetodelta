@@ -48,7 +48,8 @@ class AnswerAgent:
         query: str,
         intent: str,
         data: Dict[str, Any],
-        context: Optional[Dict] = None
+        context: Optional[Dict] = None,
+        extracted_params: Optional[Dict[str, Any]] = None
     ) -> str:
         """
         Generate natural language response in Portuguese.
@@ -58,6 +59,7 @@ class AnswerAgent:
             intent: Classified intent category
             data: Structured data from the handler
             context: Optional conversation context
+            extracted_params: Optional extracted parameters from the query (filters, search terms, etc.)
             
         Returns:
             Natural language answer in Portuguese
@@ -67,11 +69,18 @@ class AnswerAgent:
         if context and context.get("last_query"):
             context_str = f"\nContexto da conversa anterior:\n- Última pergunta: {context['last_query']}\n"
         
+        # Build extracted parameters string
+        params_str = ""
+        if extracted_params:
+            params_str = f"\nParâmetros extraídos da consulta:\n{self._format_data(extracted_params)}\n"
+            params_str += "\nNota: Use estes parâmetros para entender como a consulta foi interpretada.\n"
+            params_str += "Por exemplo, se state='Closed', o usuário estava perguntando sobre projetos concluídos/fechados.\n"
+        
         prompt = f"""
         Pergunta do usuário: {query}
         
         Tipo de consulta: {intent}
-        {context_str}
+        {context_str}{params_str}
         Dados obtidos:
         {self._format_data(data)}
         
